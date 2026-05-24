@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -1148,24 +1148,14 @@
       top: 50%;
       left: 50%;
       display: block;
-      width: 10px;
-      height: 6px;
-      border: 2px solid currentColor;
-      border-radius: 2px;
+      width: 16px;
+      height: 16px;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='none' d='M9 15l3 -3m2 -2l1 -1'/%3E%3Cpath d='M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464'/%3E%3Cpath d='M3 3l18 18'/%3E%3Cpath d='M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463'/%3E%3C/svg%3E") no-repeat center / contain;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='none' d='M9 15l3 -3m2 -2l1 -1'/%3E%3Cpath d='M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464'/%3E%3Cpath d='M3 3l18 18'/%3E%3Cpath d='M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463'/%3E%3C/svg%3E") no-repeat center / contain;
+      border: 0;
       transform: translate(-50%, -50%);
       box-sizing: border-box;
-    }
-
-    .record-toggle-btn.is-detached::after {
-      content: "";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 15px;
-      height: 2px;
-      border-radius: 999px;
-      background: currentColor;
-      transform: translate(-50%, -50%) rotate(-45deg);
     }
 
     .timeline-bar-wrap {
@@ -5325,7 +5315,6 @@
       const MAX_TIME_CHART_HISTORY_MS = 30000;
       const MAX_CHART_POINTS = 180000;
       const MAX_CHART_RENDER_POINTS = 6000;
-      const MAX_REALTIME_CACHE_HISTORY_MS = 30000;
       const MAX_LIVE_EVENT_TOTAL_CHARS = 8192;
       const MAX_RX_OPEN_EVENT_BYTES = 2048;
       const MAX_RX_OPEN_EVENT_TEXT_CHARS = 2048;
@@ -5756,14 +5745,6 @@
       function trimLiveEvents() {
         const events = state.session.liveEvents;
         if (!events.length) return;
-        const latestTimestamp = normalizeTimestampMs(events[events.length - 1]?.timestamp, nowPreciseMs());
-        const minTimestamp = latestTimestamp - MAX_REALTIME_CACHE_HISTORY_MS;
-        while (events.length > 1 && normalizeTimestampMs(events[0]?.timestamp, latestTimestamp) < minTimestamp) {
-          events.shift();
-        }
-        if (events.length > MAX_CHART_RENDER_POINTS) {
-          events.splice(0, events.length - MAX_CHART_RENDER_POINTS);
-        }
         let totalChars = events.reduce((sum, event) => sum + getEventDisplayText(event).length, 0);
         while (events.length > 1 && totalChars > MAX_LIVE_EVENT_TOTAL_CHARS) {
           totalChars -= getEventDisplayText(events[0]).length;
@@ -6775,11 +6756,30 @@
 
       function addSystemLog(message, level = 'sys') {
         console.info(`[${level}] ${message}`);
+        const text = String(message || '');
+        const timestamp = nowPreciseMs();
+        const event = buildEvent(level, [], text, {
+          timestamp,
+          metadata: { level }
+        });
+        state.session.liveEvents.push(event);
+        trimLiveEvents();
+        if (state.activeTimelineId === 'realtime') {
+          scheduleRefresh({
+            stats: false,
+            timelineBar: false,
+            derived: false,
+            monitor: true,
+            charts: false,
+            extensionButtons: false,
+            extensionPanel: false
+          });
+        }
       }
 
       let serialWebViewTracked = false;
 
-      // 仅用于浏览量统计。
+      // 仅用于浏览量统计，通过KV存储实现。
       function trackSerialWebView() {
         if (serialWebViewTracked) return;
         if (window.location.protocol === 'file:' || typeof fetch !== 'function') return;
