@@ -5532,7 +5532,7 @@
     <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
       <div class="version-modal-head">
         <div>
-          <div id="version-modal-title" class="version-modal-title">SerialWeb 1.1</div>
+          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v.1.1</div>
           <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
         </div>
         <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
@@ -5545,7 +5545,7 @@
       <div class="version-modal-body">
         <div class="version-info-grid">
           <strong>当前版本</strong>
-          <span id="version-current-label">1.1</span>
+          <span id="version-current-label">在线版本 v.1.1</span>
           <strong>工具手册</strong>
           <span><a href="https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/SerialWeb%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C" target="_blank" rel="noreferrer">查看工具手册</a></span>
           <strong>问题反馈</strong>
@@ -7067,7 +7067,7 @@
 
       function syncVersionDisplay() {
         const localMode = isLocalOfflineRuntime();
-        const versionLabel = localMode ? `离线版本 ${VERSION}` : VERSION;
+        const versionLabel = localMode ? `离线版本 v.${VERSION}` : `在线版本 v.${VERSION}`;
         appEl.classList.toggle('runtime-local', localMode);
         refs.versionInfoBtn?.classList.toggle('is-local', localMode);
         if (refs.runtimeModeLabel) refs.runtimeModeLabel.textContent = `关于 v.${VERSION}`;
