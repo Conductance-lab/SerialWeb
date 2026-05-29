@@ -5938,6 +5938,7 @@
       let playerFrame = null;
       let localPrefsTimerId = 0;
       let restoringLocalPrefs = false;
+      let localIndexDownloadPending = false;
 
       function markUiDirty(next = null) {
         const dirty = state.ui.dirty;
@@ -11330,6 +11331,12 @@
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       }
 
+      function waitForNextPaint() {
+        return new Promise((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(resolve));
+        });
+      }
+
       function getIndexDownloadUrls() {
         if (window.location.protocol === 'file:') return [];
         const urls = [];
@@ -11349,35 +11356,48 @@
             : `${current.pathname.replace(/\/?$/, '/')}index.html`;
         }
         addUrl(current.href);
-        addUrl(new URL('/api/download_index', window.location.href).href);
         return urls;
       }
 
       async function downloadLocalIndexHtml(event = null) {
         event?.preventDefault();
-        const urls = getIndexDownloadUrls();
-        for (const url of urls) {
-          try {
-            const response = await fetch(url, { cache: 'no-store' });
-            if (!response.ok) continue;
-            const html = await response.text();
-            if (!html.trim()) continue;
-            downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
-            toast('已开始下载', 'SerialWeb HTML 文件已生成。', 'success');
-            return;
-          } catch (error) {
-            console.warn('download index failed', url, error);
-          }
-        }
-
-        if (window.location.protocol === 'file:') {
-          const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
-          downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
-          toast('已开始下载', '已从当前本地页面生成 HTML 文件。', 'success');
+        if (localIndexDownloadPending) {
+          toast('正在导出', '正在准备工具文件，请等待浏览器下载框出现。', 'warn', [], { key: 'download-local-index' });
           return;
         }
+        localIndexDownloadPending = true;
+        refs.systemMenu?.classList.remove('open');
+        syncOverlayBackdropState();
+        toast('开始导出', '正在准备 SerialWeb HTML 文件，请稍候。', 'warn', [], { key: 'download-local-index' });
+        await waitForNextPaint();
 
-        toast('下载失败', '当前站点没有返回 index.html，请稍后重试。', 'error');
+        try {
+          const urls = getIndexDownloadUrls();
+          for (const url of urls) {
+            try {
+              const response = await fetch(url, { cache: 'no-store' });
+              if (!response.ok) continue;
+              const html = await response.text();
+              if (!html.trim()) continue;
+              downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
+              toast('下载已触发', '请在浏览器下载框中确认或等待文件保存完成。', 'success', [], { key: 'download-local-index' });
+              return;
+            } catch (error) {
+              console.warn('download index failed', url, error);
+            }
+          }
+
+          if (window.location.protocol === 'file:') {
+            const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+            downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
+            toast('下载已触发', '请在浏览器下载框中确认或等待文件保存完成。', 'success', [], { key: 'download-local-index' });
+            return;
+          }
+
+          toast('下载失败', '当前站点没有返回 index.html，请稍后重试。', 'error', [], { key: 'download-local-index' });
+        } finally {
+          localIndexDownloadPending = false;
+        }
       }
 
       function createDerivedRuntimeSeed(mode = state.parserMode, sourceKind = 'timeline') {
