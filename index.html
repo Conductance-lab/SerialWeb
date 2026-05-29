@@ -36,10 +36,17 @@
         if (!body) return;
         const compact = window.innerWidth <= 720;
         const layout = window.__serialWebInitialPrefs?.layout || {};
+        const host = window.location.hostname;
+        const localRuntime = window.location.protocol === 'file:'
+          || host === 'localhost'
+          || host === '127.0.0.1'
+          || host === '::1'
+          || host === '[::1]';
         body.classList.toggle('theme-dark', window.__serialWebInitialTheme === 'dark');
         body.classList.toggle('compact-single', compact);
         body.classList.toggle('layout-expanded', Boolean(layout.expanded));
         body.classList.toggle('sidebar-collapsed', !compact && Boolean(layout.sidebarCollapsed));
+        body.classList.toggle('runtime-local', localRuntime);
       };
 
       window.__setSerialWebFavicon = () => {
@@ -402,7 +409,8 @@
       pointer-events: none;
     }
 
-    .logo-mode-switch.parser-active::before {
+    .logo-mode-switch.parser-active::before,
+    body.layout-expanded .logo-mode-switch::before {
       transform: translateX(42px);
     }
 
@@ -422,6 +430,14 @@
     }
 
     .logo-mode-btn.is-active {
+      color: #f4fff9;
+    }
+
+    body.layout-expanded #serial-mode-btn {
+      color: var(--text-soft);
+    }
+
+    body.layout-expanded #parser-mode-btn {
       color: #f4fff9;
     }
 
@@ -832,6 +848,10 @@
 
     .floating-menu.open {
       display: block;
+    }
+
+    body.runtime-local #download-local-link {
+      display: none !important;
     }
 
     .custom-select-menu {
@@ -4585,7 +4605,7 @@
     }
 
     .version-modal-close-ring {
-      fill: rgba(255,255,255,0.08);
+      fill: rgba(42, 61, 82, 0.08);
       stroke: var(--border);
       stroke-width: 1;
     }
@@ -4599,8 +4619,17 @@
 
     .version-modal-close:hover .version-modal-close-ring,
     .version-modal-close:focus-visible .version-modal-close-ring {
-      fill: var(--chip-bg);
+      fill: rgba(255, 255, 255, 0.96);
       stroke: var(--border-strong);
+    }
+
+    body.theme-dark .version-modal-close-ring {
+      fill: rgba(255,255,255,0.08);
+    }
+
+    body.theme-dark .version-modal-close:hover .version-modal-close-ring,
+    body.theme-dark .version-modal-close:focus-visible .version-modal-close-ring {
+      fill: rgba(255,255,255,0.16);
     }
 
     .version-modal-body {
@@ -5105,14 +5134,14 @@
           <div class="menu-anchor">
             <button id="system-menu-btn" class="icon-btn" title="System Menu">&#9776;</button>
             <div id="system-menu" class="floating-menu">
-              <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
-              <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
-              <a id="download-local-link" href="index.html" download="SerialWeb串口调试.html">下载工具到本地</a>
-              <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">电导实验室主页</a>
               <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
                 <span id="runtime-mode-label" class="runtime-mode-label">关于 v.1.1</span>
                 <span id="online-mode-chip" class="online-mode-chip">当前在线最新</span>
               </button>
+              <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
+              <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
+              <a id="download-local-link" href="index.html" download="SerialWeb串口调试.html">下载离线版到本地</a>
+              <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">电导实验室主页</a>
             </div>
           </div>
         </div>
@@ -5535,10 +5564,9 @@
             <strong>1.1版本</strong>
             <ul>
               <li>支持设置、输入状态在退出后自动保存，下次加载时恢复使用。</li>
-              <li>支持下载工具到本地，便于离线保存和使用。</li>
+              <li>支持离线版本的下载和离线版本使用，并支持离线状态识别。</li>
               <li>优化视觉效果，包括弹窗、下拉状态和窄屏悬浮窗的模糊背景。</li>
               <li>新增关于弹窗、版本日志、工具手册、GitHub 和问题反馈入口。</li>
-              <li>支持离线使用识别与下载当前部署完整 HTML。</li>
             </ul>
           </div>
           <div class="version-release">
@@ -7041,7 +7069,9 @@
       function syncVersionDisplay() {
         const localMode = isLocalOfflineRuntime();
         const versionLabel = localMode ? `离线版本 ${VERSION}` : VERSION;
+        appEl.classList.toggle('runtime-local', localMode);
         refs.versionInfoBtn?.classList.toggle('is-local', localMode);
+        refs.downloadLocalLink?.classList.toggle('hidden', localMode);
         if (refs.runtimeModeLabel) refs.runtimeModeLabel.textContent = `关于 v.${VERSION}`;
         if (refs.onlineModeChip) {
           refs.onlineModeChip.textContent = localMode ? '访问在线模式' : '当前在线最新';
@@ -11337,26 +11367,16 @@
         });
       }
 
-      function getIndexDownloadUrls() {
-        if (window.location.protocol === 'file:') return [];
-        const urls = [];
-        const addUrl = (url) => {
-          const value = String(url || '');
-          if (value && !urls.includes(value)) urls.push(value);
-        };
-        const current = new URL(window.location.href);
-        current.hash = '';
-        current.search = '';
-        if (current.pathname.endsWith('/')) {
-          current.pathname = `${current.pathname}index.html`;
-        } else {
-          const fileName = current.pathname.split('/').pop() || '';
-          current.pathname = fileName.includes('.')
-            ? current.pathname.replace(/[^/]*$/, 'index.html')
-            : `${current.pathname.replace(/\/?$/, '/')}index.html`;
-        }
-        addUrl(current.href);
-        return urls;
+      function buildCurrentPageHtmlForDownload() {
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelector('#toast-layer')?.replaceChildren();
+        clone.querySelector('#system-menu')?.classList.remove('open');
+        clone.querySelector('#mobile-config-backdrop')?.setAttribute('aria-hidden', 'true');
+        clone.querySelectorAll('.open, .picker-open').forEach((node) => {
+          node.classList.remove('open', 'picker-open');
+        });
+        clone.querySelector('body')?.classList.remove('ui-backdrop-open');
+        return `<!DOCTYPE html>\n${clone.outerHTML}`;
       }
 
       async function downloadLocalIndexHtml(event = null) {
@@ -11372,29 +11392,9 @@
         await waitForNextPaint();
 
         try {
-          const urls = getIndexDownloadUrls();
-          for (const url of urls) {
-            try {
-              const response = await fetch(url, { cache: 'no-store' });
-              if (!response.ok) continue;
-              const html = await response.text();
-              if (!html.trim()) continue;
-              downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
-              toast('下载已触发', '请在浏览器下载框中确认或等待文件保存完成。', 'success', [], { key: 'download-local-index' });
-              return;
-            } catch (error) {
-              console.warn('download index failed', url, error);
-            }
-          }
-
-          if (window.location.protocol === 'file:') {
-            const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
-            downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
-            toast('下载已触发', '请在浏览器下载框中确认或等待文件保存完成。', 'success', [], { key: 'download-local-index' });
-            return;
-          }
-
-          toast('下载失败', '当前站点没有返回 index.html，请稍后重试。', 'error', [], { key: 'download-local-index' });
+          const html = buildCurrentPageHtmlForDownload();
+          downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
+          toast('下载已触发', '请在浏览器下载框中确认或等待文件保存完成。', 'success', [], { key: 'download-local-index' });
         } finally {
           localIndexDownloadPending = false;
         }
