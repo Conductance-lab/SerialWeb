@@ -5107,7 +5107,7 @@
             <div id="system-menu" class="floating-menu">
               <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
               <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
-              <a id="download-local-link" href="/api/download_index" download="SerialWeb串口调试.html">下载工具到本地</a>
+              <a id="download-local-link" href="index.html" download="SerialWeb串口调试.html">下载工具到本地</a>
               <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">电导实验室主页</a>
               <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
                 <span id="runtime-mode-label" class="runtime-mode-label">关于 v.1.1</span>
@@ -5583,6 +5583,7 @@
       const MAX_RX_OPEN_EVENT_TEXT_CHARS = 2048;
       const LOCAL_PREFS_KEY = 'serialweb:prefs';
       const LOCAL_PREFS_DEBOUNCE_MS = 500;
+      const DOWNLOAD_HTML_FILENAME = 'SerialWeb串口调试.html';
       const RX_IDLE_SPLIT_MS = 100;
       const CHART_ZOOM_MIN = 0.02;
       const CHART_ZOOM_MAX = 240;
@@ -5616,6 +5617,7 @@
         timelineProgress: document.getElementById('timeline-progress'),
         systemMenuBtn: document.getElementById('system-menu-btn'),
         systemMenu: document.getElementById('system-menu'),
+        downloadLocalLink: document.getElementById('download-local-link'),
         versionInfoBtn: document.getElementById('version-info-btn'),
         runtimeModeLabel: document.getElementById('runtime-mode-label'),
         onlineModeChip: document.getElementById('online-mode-chip'),
@@ -11328,6 +11330,56 @@
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       }
 
+      function getIndexDownloadUrls() {
+        if (window.location.protocol === 'file:') return [];
+        const urls = [];
+        const addUrl = (url) => {
+          const value = String(url || '');
+          if (value && !urls.includes(value)) urls.push(value);
+        };
+        const current = new URL(window.location.href);
+        current.hash = '';
+        current.search = '';
+        if (current.pathname.endsWith('/')) {
+          current.pathname = `${current.pathname}index.html`;
+        } else {
+          const fileName = current.pathname.split('/').pop() || '';
+          current.pathname = fileName.includes('.')
+            ? current.pathname.replace(/[^/]*$/, 'index.html')
+            : `${current.pathname.replace(/\/?$/, '/')}index.html`;
+        }
+        addUrl(current.href);
+        addUrl(new URL('/api/download_index', window.location.href).href);
+        return urls;
+      }
+
+      async function downloadLocalIndexHtml(event = null) {
+        event?.preventDefault();
+        const urls = getIndexDownloadUrls();
+        for (const url of urls) {
+          try {
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) continue;
+            const html = await response.text();
+            if (!html.trim()) continue;
+            downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
+            toast('已开始下载', 'SerialWeb HTML 文件已生成。', 'success');
+            return;
+          } catch (error) {
+            console.warn('download index failed', url, error);
+          }
+        }
+
+        if (window.location.protocol === 'file:') {
+          const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+          downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
+          toast('已开始下载', '已从当前本地页面生成 HTML 文件。', 'success');
+          return;
+        }
+
+        toast('下载失败', '当前站点没有返回 index.html，请稍后重试。', 'error');
+      }
+
       function createDerivedRuntimeSeed(mode = state.parserMode, sourceKind = 'timeline') {
         return {
           viewSignature: '',
@@ -12709,6 +12761,7 @@
       function attachEventListeners() {
         refs.themeToggleBtn.addEventListener('click', toggleTheme);
         refs.systemMenuBtn.addEventListener('click', () => toggleMenu(refs.systemMenu));
+        refs.downloadLocalLink?.addEventListener('click', downloadLocalIndexHtml);
         refs.versionInfoBtn?.addEventListener('click', (event) => {
           event.stopPropagation();
           if (event.target instanceof Element && event.target.closest('#online-mode-chip')) {
