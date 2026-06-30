@@ -6,48 +6,7 @@
   <title>SerialWeb | Conductance-lab</title>
   <script>
     (() => {
-      const LOCAL_PREFS_KEY = 'serialweb:prefs';
       const browserThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const readInitialPrefs = () => {
-        try {
-          const raw = localStorage.getItem(LOCAL_PREFS_KEY);
-          if (!raw) return null;
-          const payload = JSON.parse(raw);
-          return payload && typeof payload === 'object' ? payload : null;
-        } catch (error) {
-          return null;
-        }
-      };
-      const initialPrefs = readInitialPrefs();
-      const getInitialTheme = () => {
-        if (initialPrefs?.theme === 'dark' || initialPrefs?.theme === 'light') {
-          return initialPrefs.theme;
-        }
-        return browserThemeQuery.matches ? 'dark' : 'light';
-      };
-      const applyThemeClass = (theme) => {
-        document.documentElement.classList.toggle('theme-dark', theme === 'dark');
-      };
-
-      window.__serialWebInitialPrefs = initialPrefs;
-      window.__serialWebInitialTheme = getInitialTheme();
-      window.__applySerialWebInitialBodyClasses = () => {
-        const body = document.body;
-        if (!body) return;
-        const compact = window.innerWidth <= 720;
-        const layout = window.__serialWebInitialPrefs?.layout || {};
-        const host = window.location.hostname;
-        const localRuntime = window.location.protocol === 'file:'
-          || host === 'localhost'
-          || host === '127.0.0.1'
-          || host === '::1'
-          || host === '[::1]';
-        body.classList.toggle('theme-dark', window.__serialWebInitialTheme === 'dark');
-        body.classList.toggle('compact-single', compact);
-        body.classList.toggle('layout-expanded', Boolean(layout.expanded));
-        body.classList.toggle('sidebar-collapsed', !compact && Boolean(layout.sidebarCollapsed));
-        body.classList.toggle('runtime-local', localRuntime);
-      };
 
       window.__setSerialWebFavicon = () => {
         const svg = `
@@ -77,7 +36,7 @@
       };
 
       const syncDocumentTheme = () => {
-        applyThemeClass(browserThemeQuery.matches ? 'dark' : 'light');
+        document.documentElement.classList.toggle('theme-dark', browserThemeQuery.matches);
         window.__setSerialWebFavicon();
       };
 
@@ -85,8 +44,7 @@
         syncDocumentTheme();
       });
 
-      applyThemeClass(window.__serialWebInitialTheme);
-      window.__setSerialWebFavicon();
+      syncDocumentTheme();
     })();
   </script>
   <style>
@@ -114,8 +72,6 @@
       --radius-small: 14px;
       --header-height: 62px;
       --compact-float-top: 102px;
-      --overlay-backdrop: rgba(12, 18, 24, 0.46);
-      --overlay-blur: blur(10px);
       --panel-glow: radial-gradient(circle at top right, rgba(14, 159, 110, 0.18), transparent 50%);
       --timeline-fill: linear-gradient(90deg, rgba(29, 122, 242, 0.9), rgba(14, 159, 110, 0.86));
       --font-ui: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -409,8 +365,7 @@
       pointer-events: none;
     }
 
-    .logo-mode-switch.parser-active::before,
-    body.layout-expanded .logo-mode-switch::before {
+    .logo-mode-switch.parser-active::before {
       transform: translateX(42px);
     }
 
@@ -430,14 +385,6 @@
     }
 
     .logo-mode-btn.is-active {
-      color: #f4fff9;
-    }
-
-    body.layout-expanded #serial-mode-btn {
-      color: var(--text-soft);
-    }
-
-    body.layout-expanded #parser-mode-btn {
       color: #f4fff9;
     }
 
@@ -850,10 +797,6 @@
       display: block;
     }
 
-    body.runtime-local #download-local-link {
-      display: none !important;
-    }
-
     .custom-select-menu {
       display: block;
     }
@@ -888,33 +831,6 @@
       border: 1px solid rgba(29, 122, 242, 0.08);
       cursor: default;
       user-select: text;
-    }
-
-    .floating-menu .version-info-btn {
-      justify-content: space-between;
-      gap: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .runtime-mode-label {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .online-mode-chip {
-      display: inline-flex;
-      flex: 0 0 auto;
-      border-radius: 999px;
-      padding: 3px 8px;
-      border: 1px solid rgba(29, 122, 242, 0.2);
-      background: rgba(29, 122, 242, 0.1);
-      color: var(--signal);
-      font-size: 11px;
-      font-weight: 800;
-      line-height: 1.3;
     }
 
     .floating-menu button:hover,
@@ -1799,6 +1715,39 @@
       transform: translateX(100%);
     }
 
+    .sidebar-collapse-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 62px;
+      height: 44px;
+      padding: 0 10px;
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.12), transparent 82%),
+        var(--bg-panel-strong);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .sidebar-collapse-btn svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     body.layout-expanded .send-panel {
       --send-manual-h: 56px;
     }
@@ -2560,8 +2509,8 @@
       position: fixed;
       inset: 0;
       z-index: 20;
-      background: var(--overlay-backdrop);
-      backdrop-filter: var(--overlay-blur);
+      background: rgba(7, 12, 18, 0.16);
+      backdrop-filter: none;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.18s ease;
@@ -3170,14 +3119,18 @@
       gap: 10px;
     }
 
-    .chip-cloud {
+    .chip-cloud,
+    .field-badges,
+    .module-tags {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
       align-items: flex-start;
     }
 
-    .chip {
+    .chip,
+    .field-badge,
+    .module-tag {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
@@ -3191,6 +3144,12 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .field-badge.numeric {
+      color: var(--accent-strong);
+      background: rgba(14, 159, 110, 0.08);
+      border-color: rgba(14, 159, 110, 0.14);
     }
 
     .insight-pre,
@@ -3774,6 +3733,10 @@
       max-width: 92px;
     }
 
+    .monitor-live-meta .device-meta-line[data-meta="fps"] span {
+      max-width: 58px;
+    }
+
     #clear-live-log-btn {
       min-height: 30px;
       padding: 6px 12px;
@@ -3795,7 +3758,8 @@
       display: none;
     }
 
-    .monitor-panel.is-meta-compact .monitor-live-meta .device-meta-line[data-meta="mode"] {
+    .monitor-panel.is-meta-compact .monitor-live-meta .device-meta-line[data-meta="mode"],
+    .monitor-panel.is-meta-compact .monitor-live-meta .device-meta-line[data-meta="fps"] {
       display: none;
     }
 
@@ -4530,201 +4494,6 @@
       padding: 0;
     }
 
-    .version-modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 120;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 22px;
-      background: var(--overlay-backdrop);
-      backdrop-filter: var(--overlay-blur);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.18s ease;
-    }
-
-    .version-modal-backdrop.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .version-modal {
-      width: min(520px, 100%);
-      max-height: min(680px, calc(100vh - 44px));
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      overflow: hidden;
-      border-radius: 18px;
-      border: 1px solid var(--border-strong);
-      background: var(--bg-panel-strong);
-      box-shadow: var(--shadow);
-      color: var(--text);
-    }
-
-    .version-modal-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 18px 20px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .version-modal-title {
-      font-size: 18px;
-      font-weight: 850;
-      line-height: 1.2;
-    }
-
-    .version-modal-subtitle {
-      margin-top: 5px;
-      color: var(--text-soft);
-      font-size: 13px;
-    }
-
-    .version-modal-close {
-      width: 32px;
-      height: 32px;
-      min-width: 32px;
-      display: grid;
-      place-items: center;
-      padding: 0;
-      border: 0;
-      border-radius: 999px;
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .version-modal-close-icon {
-      width: 32px;
-      height: 32px;
-      display: block;
-    }
-
-    .version-modal-close-ring {
-      fill: rgba(42, 61, 82, 0.08);
-      stroke: var(--border);
-      stroke-width: 1;
-    }
-
-    .version-modal-close-mark {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2.2;
-      stroke-linecap: round;
-    }
-
-    .version-modal-close:hover .version-modal-close-ring,
-    .version-modal-close:focus-visible .version-modal-close-ring {
-      fill: rgba(255, 255, 255, 0.96);
-      stroke: var(--border-strong);
-    }
-
-    body.theme-dark .version-modal-close-ring {
-      fill: rgba(255,255,255,0.08);
-    }
-
-    body.theme-dark .version-modal-close:hover .version-modal-close-ring,
-    body.theme-dark .version-modal-close:focus-visible .version-modal-close-ring {
-      fill: rgba(255,255,255,0.16);
-    }
-
-    .version-modal-body {
-      display: grid;
-      gap: 16px;
-      padding: 18px 20px 20px;
-      min-height: 0;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .version-info-grid {
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      gap: 8px 14px;
-      font-size: 13px;
-    }
-
-    .version-info-grid strong {
-      color: var(--text-soft);
-      font-weight: 750;
-    }
-
-    .version-info-grid a {
-      color: var(--signal);
-      font-weight: 750;
-      text-decoration: none;
-      overflow-wrap: anywhere;
-    }
-
-    .version-info-grid a:hover {
-      text-decoration: underline;
-    }
-
-    .version-online-box {
-      display: none;
-      gap: 6px;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(29, 122, 242, 0.18);
-      background: rgba(29, 122, 242, 0.08);
-      font-size: 13px;
-    }
-
-    .version-online-box.visible {
-      display: grid;
-    }
-
-    .version-online-box strong {
-      font-weight: 850;
-      color: var(--text);
-    }
-
-    .version-online-box a {
-      color: var(--signal);
-      font-weight: 750;
-      text-decoration: none;
-      overflow-wrap: anywhere;
-    }
-
-    .version-online-box a:hover {
-      text-decoration: underline;
-    }
-
-    .version-changelog {
-      display: grid;
-      gap: 10px;
-    }
-
-    .version-changelog-title {
-      font-size: 13px;
-      font-weight: 850;
-      color: var(--text);
-    }
-
-    .version-release {
-      display: grid;
-      gap: 6px;
-    }
-
-    .version-release strong {
-      font-size: 13px;
-      font-weight: 850;
-      color: var(--text);
-    }
-
-    .version-changelog ul {
-      margin: 0;
-      padding-left: 18px;
-      color: var(--text-soft);
-      font-size: 13px;
-      line-height: 1.58;
-    }
-
     .sr-only {
       position: absolute;
       width: 1px;
@@ -5055,9 +4824,6 @@
   </style>
 </head>
 <body>
-  <script>
-    window.__applySerialWebInitialBodyClasses?.();
-  </script>
   <div class="app-shell">
     <header id="app-topbar" class="topbar">
       <section class="brand-block">
@@ -5134,14 +4900,10 @@
           <div class="menu-anchor">
             <button id="system-menu-btn" class="icon-btn" title="System Menu">&#9776;</button>
             <div id="system-menu" class="floating-menu">
-              <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
-                <span id="runtime-mode-label" class="runtime-mode-label">关于 v.1.1</span>
-                <span id="online-mode-chip" class="online-mode-chip">当前在线最新</span>
-              </button>
+              <div class="menu-static-line">当前版本:Beta.1.0</div>
               <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
-              <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
-              <a id="download-local-link" href="index.html" download="SerialWeb串口调试.html">下载离线版到本地</a>
-              <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">电导实验室主页</a>
+              <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">产品手册</a>
+              <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">前往电导实验室主页</a>
             </div>
           </div>
         </div>
@@ -5429,6 +5191,10 @@
                   <strong>RX</strong>
                   <span id="monitor-meta-rx">-</span>
                 </div>
+                <div class="device-meta-line" data-meta="fps">
+                  <strong>FPS</strong>
+                  <span id="monitor-meta-fps">-</span>
+                </div>
               </div>
             </div>
             <div class="button-row">
@@ -5528,77 +5294,20 @@
   </div>
 
   <input id="timeline-file-input" type="file" class="hidden" accept=".csv,.txt,.bin,.timeline">
-  <div id="version-modal-backdrop" class="version-modal-backdrop" aria-hidden="true">
-    <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
-      <div class="version-modal-head">
-        <div>
-          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v.1.1</div>
-          <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
-        </div>
-        <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
-          <svg class="version-modal-close-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-            <circle class="version-modal-close-ring" cx="16" cy="16" r="15.5"></circle>
-            <path class="version-modal-close-mark" d="M11.5 11.5L20.5 20.5M20.5 11.5L11.5 20.5"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="version-modal-body">
-        <div class="version-info-grid">
-          <strong>当前版本</strong>
-          <span id="version-current-label">在线版本 v.1.1</span>
-          <strong>工具手册</strong>
-          <span><a href="https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/SerialWeb%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C" target="_blank" rel="noreferrer">查看工具手册</a></span>
-          <strong>问题反馈</strong>
-          <span><a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">提交问题反馈</a></span>
-        </div>
-        <div id="version-online-box" class="version-online-box">
-          <strong>最新在线版本</strong>
-          <span>国内访问</span>
-          <a href="https://conductance-lab.xyz/SerialWeb/" target="_blank" rel="noreferrer">https://conductance-lab.xyz/SerialWeb/</a>
-          <span>GitHub Page</span>
-          <a href="https://conductance-lab.github.io/SerialWeb/" target="_blank" rel="noreferrer">https://conductance-lab.github.io/SerialWeb/</a>
-        </div>
-        <div class="version-changelog">
-          <div class="version-changelog-title">更新日志</div>
-          <div class="version-release">
-            <strong>1.1版本</strong>
-            <ul>
-              <li>支持设置、输入状态在退出后自动保存，下次加载时恢复使用。</li>
-              <li>支持离线版本的下载和离线版本使用，并支持离线状态识别。</li>
-              <li>优化视觉效果，包括弹窗、下拉状态和窄屏悬浮窗的模糊背景。</li>
-              <li>新增关于弹窗、版本日志、工具手册、GitHub 和问题反馈入口。</li>
-            </ul>
-          </div>
-          <div class="version-release">
-            <strong>1.0版本</strong>
-            <ul>
-              <li>支持串口监视和设备连接管理，包括 VID/PID 显示、串口参数配置、硬件流控与 DTR/RTS/BREAK 信号控制。</li>
-              <li>支持深浅主题切换并自动跟随系统变换，以及宽屏/窄屏两种布局策略模式。</li>
-              <li>加入自动重连机制，可在设备插拔、连接丢失后尝试恢复连接。</li>
-              <li>加入失焦自动断连控制机制，便于在窗口失焦时释放串口并在恢复焦点后继续使用。</li>
-              <li>支持图形解析，包括文本解析、十六进制结构解析、自动识别解析规则和实时解析结果展示。</li>
-              <li>支持时域图、频域图绘制，可绑定解析通道并调整视图范围、图表高度和量程策略。</li>
-              <li>支持时间线系统、实时冻结、录制归档、回放、导入导出和解析配置复用。</li>
-              <li>时间线系统支持导入/导出原始文件 BIN / TXT / CSV，解析结果导出 TXT / CSV。</li>
-              <li>支持手动发送、定时发送、触发发送和预设发送等串口调试工作流。</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
+  <input id="parser-config-file-input" type="file" class="hidden" accept=".json,.wslparser">
   <div id="toast-layer" class="toast-layer"></div>
 
   <script>
     (() => {
-      const VERSION = '1.1';
-      const ONLINE_VERSION_URL = 'https://conductance-lab.xyz/SerialWeb/';
-      const VERSION_MODAL_SEEN_KEY = 'serialweb:version-modal-seen';
+      const VERSION = '1.0.0';
+      const MAX_LIVE_LOG_LINES = 400;
+      const MAX_RENDERED_LOG_LINES = 160;
       const MAX_DERIVED_LOG_LINES = 320;
       const SERIAL_BUFFER_SIZE = 65536;
       const PRESET_EXPECTATION_TIMEOUT_MS = 1800;
       const PLAYER_STEP_MS = 250;
       const PLAYER_FAST_STEP_MS = 1000;
+      const FPS_WINDOW_MS = 1000;
       const HIGH_RES_TIME_EPOCH_MS = (typeof performance !== 'undefined' && Number.isFinite(performance.timeOrigin))
         ? performance.timeOrigin
         : (Date.now() - (typeof performance !== 'undefined' ? performance.now() : 0));
@@ -5609,9 +5318,6 @@
       const MAX_LIVE_EVENT_TOTAL_CHARS = 8192;
       const MAX_RX_OPEN_EVENT_BYTES = 2048;
       const MAX_RX_OPEN_EVENT_TEXT_CHARS = 2048;
-      const LOCAL_PREFS_KEY = 'serialweb:prefs';
-      const LOCAL_PREFS_DEBOUNCE_MS = 500;
-      const DOWNLOAD_HTML_FILENAME = 'SerialWeb串口调试.html';
       const RX_IDLE_SPLIT_MS = 100;
       const CHART_ZOOM_MIN = 0.02;
       const CHART_ZOOM_MAX = 240;
@@ -5626,6 +5332,7 @@
         parserModeBtn: document.getElementById('parser-mode-btn'),
         statusPill: document.querySelector('.status-pill'),
         logoModeSwitch: document.getElementById('logo-mode-switch'),
+        sidebarCollapseBtn: document.getElementById('sidebar-collapse-btn'),
         serialStatusDot: document.getElementById('serial-status-dot'),
         serialStatusText: document.getElementById('serial-status-text'),
         themeToggleBtn: document.getElementById('theme-toggle-btn'),
@@ -5638,6 +5345,7 @@
         timelineRibbonShell: document.getElementById('timeline-ribbon-shell'),
         timelineHistoryStrip: document.getElementById('timeline-history-strip'),
         timelineLiveIndicator: document.getElementById('timeline-live-indicator'),
+        timelineLiveBar: document.getElementById('timeline-live-bar'),
         timelineFreezeHub: document.getElementById('timeline-freeze-hub'),
         timelineFreezeBtn: document.getElementById('timeline-freeze-btn'),
         timelineFreezeIcon: document.getElementById('timeline-freeze-icon'),
@@ -5645,15 +5353,7 @@
         timelineProgress: document.getElementById('timeline-progress'),
         systemMenuBtn: document.getElementById('system-menu-btn'),
         systemMenu: document.getElementById('system-menu'),
-        downloadLocalLink: document.getElementById('download-local-link'),
-        versionInfoBtn: document.getElementById('version-info-btn'),
-        runtimeModeLabel: document.getElementById('runtime-mode-label'),
-        onlineModeChip: document.getElementById('online-mode-chip'),
-        versionModalBackdrop: document.getElementById('version-modal-backdrop'),
-        versionModalClose: document.getElementById('version-modal-close'),
-        versionModalTitle: document.getElementById('version-modal-title'),
-        versionCurrentLabel: document.getElementById('version-current-label'),
-        versionOnlineBox: document.getElementById('version-online-box'),
+        checkUpdateBtn: document.getElementById('check-update-btn'),
         connectBtn: document.getElementById('connect-btn'),
         baudRate: document.getElementById('baud-rate'),
         baudRateAnchor: document.getElementById('baud-rate-anchor'),
@@ -5702,27 +5402,39 @@
         monitorPanel: document.querySelector('.monitor-panel'),
         mobileConfigBackdrop: document.getElementById('mobile-config-backdrop'),
         chartNavRail: document.getElementById('chart-nav-rail'),
+        desktopExpandBtn: document.getElementById('desktop-expand-btn'),
+        desktopLayoutBtn: document.getElementById('desktop-layout-btn'),
+        desktopLayoutBtnLabel: document.getElementById('desktop-layout-btn-label'),
+        desktopLayoutBtnMeta: document.getElementById('desktop-layout-btn-meta'),
         textParserPane: document.getElementById('text-parser-pane'),
         binaryParserPane: document.getElementById('binary-parser-pane'),
         parserModeSwitch: document.querySelector('.parser-mode-switch'),
+        textRuleEditor: document.getElementById('text-rule-editor'),
         textRuleOverlay: document.getElementById('text-rule-overlay'),
         textParseRule: document.getElementById('text-parse-rule'),
         addBinaryRowBtn: document.getElementById('add-binary-row-btn'),
         binarySchemaList: document.getElementById('binary-schema-list'),
         copyParserConfigBtn: document.getElementById('copy-parser-config-btn'),
         pasteParserConfigBtn: document.getElementById('paste-parser-config-btn'),
+        loadParserConfigBtn: document.getElementById('load-parser-config-btn'),
+        saveParserConfigBtn: document.getElementById('save-parser-config-btn'),
         applyRecommendedRuleBtn: document.getElementById('apply-recommended-rule-btn'),
+        fieldBadges: document.getElementById('field-badges'),
+        recommendedRule: document.getElementById('recommended-rule'),
         parserPreview: document.getElementById('parser-preview'),
         addTimeChartBtn: document.getElementById('add-time-chart-btn'),
         addFftChartBtn: document.getElementById('add-fft-chart-btn'),
         clearChartsBtn: document.getElementById('clear-charts-btn'),
         chartList: document.getElementById('chart-list'),
+        monitorLiveMeta: document.getElementById('monitor-live-meta'),
         monitorMetaMode: document.getElementById('monitor-meta-mode'),
         monitorMetaTx: document.getElementById('monitor-meta-tx'),
         monitorMetaRx: document.getElementById('monitor-meta-rx'),
+        monitorMetaFps: document.getElementById('monitor-meta-fps'),
         clearLiveLogBtn: document.getElementById('clear-live-log-btn'),
         terminalJumpBtn: document.getElementById('terminal-jump-btn'),
         terminal: document.getElementById('terminal'),
+        sendModeBadges: document.getElementById('send-mode-badges'),
         sendPanel: document.getElementById('send-panel'),
         sendExtensionShell: document.getElementById('send-extension-shell'),
         sendManualPanel: document.getElementById('send-manual-panel'),
@@ -5737,6 +5449,7 @@
         toggleConditionSendEnableBtn: document.getElementById('toggle-condition-send-enable-btn'),
         togglePresetSendBtn: document.getElementById('toggle-preset-send-btn'),
         togglePresetSendEnableBtn: document.getElementById('toggle-preset-send-enable-btn'),
+        extensionPanel: document.getElementById('extension-panel'),
         autoSendModule: document.getElementById('auto-send-module'),
         conditionSendModule: document.getElementById('condition-send-module'),
         presetSendModule: document.getElementById('preset-send-module'),
@@ -5751,6 +5464,7 @@
         addPresetItemBtn: document.getElementById('add-preset-item-btn'),
         presetSendList: document.getElementById('preset-send-list'),
         timelineFileInput: document.getElementById('timeline-file-input'),
+        parserConfigFileInput: document.getElementById('parser-config-file-input'),
         toastLayer: document.getElementById('toast-layer')
       };
 
@@ -5825,16 +5539,13 @@
           newlineMode: 'rn',
           appendNewline: true
         },
-        sendDraft: {
-          text: '',
-          hex: ''
-        },
         session: {
           startMs: Date.now(),
           txBytes: 0,
           rxBytes: 0,
           rawChunks: [],
-          liveEvents: []
+          liveEvents: [],
+          frameRateMarks: []
         },
         recording: {
           active: false,
@@ -5964,8 +5675,6 @@
       let schemaRowIdCounter = 0;
       let timelineIdCounter = 0;
       let playerFrame = null;
-      let localPrefsTimerId = 0;
-      let restoringLocalPrefs = false;
 
       function markUiDirty(next = null) {
         const dirty = state.ui.dirty;
@@ -6007,6 +5716,7 @@
       function clearRealtimeHistoryData() {
         state.session.rawChunks = [];
         state.session.liveEvents = [];
+        state.session.frameRateMarks = [];
         state.session.txBytes = 0;
         state.session.rxBytes = 0;
         state.serial.rxActiveEvent = null;
@@ -6436,6 +6146,10 @@
         return { kind: 'generic', detail: message || fallback };
       }
 
+      function describeSerialError(error, fallback = '串口操作失败') {
+        return getSerialErrorInfo(error, fallback).detail;
+      }
+
       function getUnifiedConnectionFailureDetail() {
         return '串口可能被占用，请关闭其他串口软件后重试';
       }
@@ -6496,20 +6210,17 @@
       function syncSendInputModeUI() {
         refs.sendInput.placeholder = getSendInputPlaceholder();
         if (state.settings.sendMode === 'hex') {
-          const raw = sanitizeHexInputValue(state.sendDraft.hex || refs.sendInput.dataset.rawHex || refs.sendInput.value);
-          state.sendDraft.hex = raw;
+          const raw = sanitizeHexInputValue(refs.sendInput.dataset.rawHex || refs.sendInput.value);
           refs.sendInput.dataset.rawHex = raw;
           refs.sendInput.value = formatHexInputDisplay(raw);
         } else {
           delete refs.sendInput.dataset.rawHex;
-          refs.sendInput.value = String(state.sendDraft.text || '');
         }
       }
 
       function normalizeSendInputValue() {
         if (state.settings.sendMode !== 'hex') {
           delete refs.sendInput.dataset.rawHex;
-          state.sendDraft.text = refs.sendInput.value;
           return;
         }
         const originalValue = refs.sendInput.value;
@@ -6517,42 +6228,12 @@
         const rawCursor = countHexCharsBefore(originalValue, selectionStart);
         const raw = sanitizeHexInputValue(originalValue);
         const display = formatHexInputDisplay(raw);
-        state.sendDraft.hex = raw;
         refs.sendInput.dataset.rawHex = raw;
         if (refs.sendInput.value !== display) {
           refs.sendInput.value = display;
         }
         const displayCaret = Math.min(display.length, getDisplayCaretFromRawIndex(rawCursor));
         refs.sendInput.setSelectionRange(displayCaret, displayCaret);
-      }
-
-      function captureSendDraftFromInput() {
-        if (!refs.sendInput) return;
-        if (state.settings.sendMode === 'hex') {
-          state.sendDraft.hex = sanitizeHexInputValue(refs.sendInput.dataset.rawHex || refs.sendInput.value);
-          return;
-        }
-        state.sendDraft.text = refs.sendInput.value;
-      }
-
-      function captureSettingsInputsFromRefs() {
-        if (!refs.baudRate) return;
-        state.settings.baudRate = refs.baudRate.value || state.settings.baudRate;
-        state.settings.dataBits = Number(refs.dataBits?.value || state.settings.dataBits || 8);
-        state.settings.stopBits = Number(refs.stopBits?.value || state.settings.stopBits || 1);
-        state.settings.parity = refs.parity?.value || state.settings.parity;
-        state.settings.releaseSignalsOnBlur = Boolean(refs.releaseOnBlur?.checked);
-        state.settings.flowControl = refs.flowControl?.checked ? 'hardware' : 'none';
-        state.settings.signalDtr = Boolean(refs.signalDtr?.checked);
-        state.settings.signalRts = Boolean(refs.signalRts?.checked);
-        state.settings.signalBreak = Boolean(refs.signalBreak?.checked);
-        state.settings.autoReconnect = Boolean(refs.autoReconnect?.checked);
-        state.settings.rxDisplayMode = refs.rxDisplayMode?.checked ? 'hex' : 'text';
-        state.settings.textEncoding = refs.textEncoding?.value || state.settings.textEncoding;
-        state.settings.appendTimestamp = Boolean(refs.appendTimestamp?.checked);
-        state.settings.sendMode = refs.sendMode?.checked ? 'hex' : 'ascii';
-        state.settings.newlineMode = refs.newlineMode?.value || state.settings.newlineMode;
-        state.settings.appendNewline = Boolean(refs.appendNewline?.checked);
       }
 
       function buildPayloadFrame(payload, sendOptions = state.settings) {
@@ -6570,6 +6251,27 @@
           bytes = appendLineEnding(bytes, options.newlineMode);
         }
         return { bytes, displayText, options };
+      }
+
+      function syncSettingsInputsFromState() {
+        refs.baudRate.value = state.settings.baudRate;
+        refs.dataBits.value = String(state.settings.dataBits);
+        refs.stopBits.value = String(state.settings.stopBits);
+        refs.parity.value = state.settings.parity;
+        refs.releaseOnBlur.checked = state.settings.releaseSignalsOnBlur;
+        refs.flowControl.checked = state.settings.flowControl === 'hardware';
+        refs.autoReconnect.checked = state.settings.autoReconnect;
+        refs.signalDtr.checked = state.settings.signalDtr;
+        refs.signalRts.checked = state.settings.signalRts;
+        refs.signalBreak.checked = state.settings.signalBreak;
+        refs.rxDisplayMode.checked = state.settings.rxDisplayMode === 'hex';
+        refs.textEncoding.value = state.settings.textEncoding;
+        refs.appendTimestamp.checked = state.settings.appendTimestamp;
+        refs.sendMode.checked = state.settings.sendMode === 'hex';
+        refs.newlineMode.value = state.settings.newlineMode;
+        refs.appendNewline.checked = state.settings.appendNewline;
+        syncSendInputModeUI();
+        updateSignalControlsUI();
       }
 
       function applyParserGraphStateSnapshot(snapshot) {
@@ -6640,7 +6342,6 @@
         state.theme = state.theme === 'dark' ? 'light' : 'dark';
         applyTheme();
         renderCharts();
-        scheduleLocalPrefsSave();
       }
 
       function shouldEnhanceSelect(select) {
@@ -6878,6 +6579,11 @@
         refs.serialModeBtn?.classList.toggle('is-active', !state.layoutExpanded);
         refs.parserModeBtn?.classList.toggle('is-active', state.layoutExpanded);
         refs.logoModeSwitch?.classList.toggle('parser-active', state.layoutExpanded);
+        if (refs.sidebarCollapseBtn) {
+          refs.sidebarCollapseBtn.title = compact
+            ? (state.ui.compactConfigOpen ? '收起侧栏' : '展开侧栏')
+            : (state.ui.sidebarCollapsed ? '恢复左栏布局' : (state.layoutExpanded ? '折叠串口监视器' : '折叠设备连接管理'));
+        }
       }
 
       function setCompactConfigOpen(open) {
@@ -6904,7 +6610,6 @@
         state.ui.compactConfigOpen = false;
         state.ui.sidebarCollapsed = !state.ui.sidebarCollapsed;
         syncCompactLayoutState();
-        scheduleLocalPrefsSave();
       }
 
       function toggleLayoutMode() {
@@ -6914,7 +6619,6 @@
         }
         applyLayout();
         scheduleRefresh();
-        scheduleLocalPrefsSave();
       }
 
       function arrangeWorkspacePanels() {
@@ -6983,13 +6687,11 @@
           if (menu !== menuEl) menu.classList.remove('open');
         });
         menuEl.classList.toggle('open', willOpen);
-        syncOverlayBackdropState();
       }
 
       function syncOverlayBackdropState() {
         const pickerOpen = refs.timelineRibbonShell?.classList.contains('picker-open');
-        const systemMenuOpen = refs.systemMenu?.classList.contains('open');
-        const showBackdrop = Boolean(state.ui.compactConfigOpen || pickerOpen || systemMenuOpen);
+        const showBackdrop = Boolean(state.ui.compactConfigOpen || pickerOpen);
         appEl.classList.toggle('ui-backdrop-open', showBackdrop);
         refs.mobileConfigBackdrop.setAttribute('aria-hidden', showBackdrop ? 'false' : 'true');
       }
@@ -7019,71 +6721,6 @@
         renderTimelineSelect();
         refs.timelineRibbonShell.classList.add('picker-open');
         syncOverlayBackdropState();
-      }
-
-      function openVersionModal() {
-        refs.versionModalBackdrop?.classList.add('open');
-        refs.versionModalBackdrop?.setAttribute('aria-hidden', 'false');
-        document.querySelectorAll('.floating-menu.open').forEach((menu) => menu.classList.remove('open'));
-        syncOverlayBackdropState();
-        refs.versionModalClose?.focus();
-      }
-
-      function closeVersionModal() {
-        refs.versionModalBackdrop?.classList.remove('open');
-        refs.versionModalBackdrop?.setAttribute('aria-hidden', 'true');
-      }
-
-      function hasSeenVersionModal() {
-        try {
-          return localStorage.getItem(VERSION_MODAL_SEEN_KEY) === VERSION;
-        } catch (error) {
-          return true;
-        }
-      }
-
-      function markVersionModalSeen() {
-        try {
-          localStorage.setItem(VERSION_MODAL_SEEN_KEY, VERSION);
-        } catch (error) {
-          console.warn('save version modal flag failed', error);
-        }
-      }
-
-      function openInitialVersionModalIfNeeded() {
-        if (hasSeenVersionModal()) return;
-        markVersionModalSeen();
-        requestAnimationFrame(() => openVersionModal());
-      }
-
-      function isLocalOfflineRuntime() {
-        const host = window.location.hostname;
-        return window.location.protocol === 'file:'
-          || host === 'localhost'
-          || host === '127.0.0.1'
-          || host === '::1'
-          || host === '[::1]';
-      }
-
-      function syncVersionDisplay() {
-        const localMode = isLocalOfflineRuntime();
-        const versionLabel = localMode ? `离线版本 v.${VERSION}` : `在线版本 v.${VERSION}`;
-        appEl.classList.toggle('runtime-local', localMode);
-        refs.versionInfoBtn?.classList.toggle('is-local', localMode);
-        if (refs.runtimeModeLabel) refs.runtimeModeLabel.textContent = `关于 v.${VERSION}`;
-        if (refs.onlineModeChip) {
-          refs.onlineModeChip.textContent = localMode ? '访问在线模式' : '当前在线最新';
-          refs.onlineModeChip.setAttribute('aria-hidden', 'false');
-          refs.onlineModeChip.title = localMode ? '打开在线版本' : '当前已是在线版本';
-        }
-        if (refs.versionModalTitle) {
-          refs.versionModalTitle.textContent = `SerialWeb ${versionLabel}`;
-        }
-        if (refs.versionCurrentLabel) {
-          refs.versionCurrentLabel.textContent = versionLabel;
-        }
-        refs.versionOnlineBox?.classList.toggle('visible', isLocalOfflineRuntime());
-        refs.versionOnlineBox?.querySelector('a')?.setAttribute('href', ONLINE_VERSION_URL);
       }
 
       function closeMenus(event) {
@@ -7152,6 +6789,15 @@
           cache: 'no-store',
           keepalive: true,
         }).catch(() => {});
+      }
+
+      function markFrameRate(ts, count = true) {
+        if (!count) return;
+        state.session.frameRateMarks.push(ts);
+        const minTime = ts - FPS_WINDOW_MS;
+        while (state.session.frameRateMarks.length && state.session.frameRateMarks[0] < minTime) {
+          state.session.frameRateMarks.shift();
+        }
       }
 
       function resetRxSegmentationState() {
@@ -7286,6 +6932,7 @@
         }
         trimLiveEvents();
         state.session.rxBytes += source.length;
+        markFrameRate(baseTimestamp, true);
         scheduleRefresh({
           stats: true,
           timelineBar: true,
@@ -7507,6 +7154,7 @@
         processPresetExpectations(event);
         state.session.liveEvents.push(event);
         trimLiveEvents();
+        markFrameRate(event.timestamp, true);
         if (direction === 'tx') state.session.txBytes += event.bytes.length || 0;
         if (direction === 'rx') {
           state.session.rxBytes += event.bytes.length || 0;
@@ -8644,6 +8292,7 @@
         const timeline = getActiveTimeline();
         const isRealtime = !timeline;
         const timelineName = isRealtime ? '实时模式' : '回放模式';
+        const activeEvents = getActiveEvents();
         const activeRawChunks = getActiveRawChunks();
         const txBytes = isRealtime
           ? String(state.session.txBytes || 0)
@@ -8651,15 +8300,20 @@
         const rxBytes = isRealtime
           ? String(state.session.rxBytes || 0)
           : String(activeRawChunks.filter((chunk) => chunk.direction === 'rx').reduce((sum, chunk) => sum + (Array.isArray(chunk.bytes) ? chunk.bytes.length : 0), 0));
+        const fpsText = isRealtime
+          ? `${state.session.frameRateMarks.length} fps`
+          : `${activeEvents.filter((event) => event.direction === 'rx' || event.direction === 'tx').length} fps`;
         const uptime = formatDuration(Date.now() - state.session.startMs);
         const connected = state.serial.connected;
         if (refs.statUptime) refs.statUptime.textContent = uptime;
         if (refs.statTimeline) refs.statTimeline.textContent = isRealtime ? timelineName : (timeline?.name || '回放模式');
         if (refs.statTxCount) refs.statTxCount.textContent = txBytes;
         if (refs.statRxCount) refs.statRxCount.textContent = rxBytes;
+        if (refs.statFps) refs.statFps.textContent = fpsText;
         if (refs.monitorMetaMode) refs.monitorMetaMode.textContent = isRealtime ? (connected ? timelineName : '-') : timelineName;
         if (refs.monitorMetaTx) refs.monitorMetaTx.textContent = isRealtime ? (connected ? txBytes : '-') : txBytes;
         if (refs.monitorMetaRx) refs.monitorMetaRx.textContent = isRealtime ? (connected ? rxBytes : '-') : rxBytes;
+        if (refs.monitorMetaFps) refs.monitorMetaFps.textContent = isRealtime ? (connected ? fpsText : '-') : fpsText;
       }
 
       function renderTimelineBar() {
@@ -8986,6 +8640,10 @@
 
       function splitTemplateSegments(text) {
         return String(text || '').match(/[A-Za-z0-9.+-]+|[^A-Za-z0-9.+-]+/g) || [];
+      }
+
+      function extractDelimiterSignature(text) {
+        return splitTemplateSegments(text).filter((segment, index) => index % 2 === 1 || /[^A-Za-z0-9.+-]/.test(segment));
       }
 
       function buildAutoDetectedRule(events) {
@@ -9965,7 +9623,6 @@
           state.modules[key] = false;
         });
         state.modules[targetKey] = nextOpen;
-        scheduleLocalPrefsSave();
         scheduleRefresh();
       }
 
@@ -10158,14 +9815,12 @@
         if (mode === 'auto') {
           state.autoSend.enabled = !state.autoSend.enabled;
           syncAutoSendRuntime();
-          scheduleLocalPrefsSave();
           scheduleRefresh();
           return;
         }
         if (mode === 'condition') {
           state.conditionSend.enabled = !state.conditionSend.enabled;
           ensureConditionRuleItem();
-          scheduleLocalPrefsSave();
           scheduleRefresh();
           return;
         }
@@ -10320,6 +9975,17 @@
           syncCustomSelects(refs.chartList);
         }
         scheduleChartPaint(force);
+      }
+
+      function rerenderChartPanel(chart) {
+        const panel = refs.chartList?.querySelector(`[data-chart-id="${chart.id}"]`);
+        if (!panel) {
+          renderCharts(true);
+          return;
+        }
+        panel.outerHTML = renderChartPanel(chart);
+        state.ui.chartRenderSignature = getChartRenderSignature();
+        scheduleChartPaint(true);
       }
 
       function scheduleChartPaint(force = false) {
@@ -11359,49 +11025,6 @@
         setTimeout(() => URL.revokeObjectURL(url), 2000);
       }
 
-      function getIndexDownloadUrl() {
-        if (window.location.protocol === 'file:') return '';
-        const current = new URL(window.location.href);
-        current.hash = '';
-        current.search = '';
-        if (current.pathname.endsWith('/')) {
-          current.pathname = `${current.pathname}index.html`;
-        } else {
-          const fileName = current.pathname.split('/').pop() || '';
-          current.pathname = fileName.includes('.')
-            ? current.pathname.replace(/[^/]*$/, 'index.html')
-            : `${current.pathname.replace(/\/?$/, '/')}index.html`;
-        }
-        return current.href;
-      }
-
-      async function downloadLocalIndexHtml(event = null) {
-        event?.preventDefault();
-        refs.systemMenu?.classList.remove('open');
-        syncOverlayBackdropState();
-        toast('开始准备下载', '请在浏览器弹出的另存为窗口中保存离线版。', 'warn', [], { key: 'download-local-index' });
-        const url = getIndexDownloadUrl();
-        if (!url) {
-          toast('下载失败', '离线页面无法重新获取 index.html。', 'error', [], { key: 'download-local-index' });
-          return;
-        }
-        try {
-          const response = await fetch(url, { cache: 'no-store' });
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-          const html = await response.text();
-          if (!html.trim()) {
-            throw new Error('empty index.html');
-          }
-          downloadFile(DOWNLOAD_HTML_FILENAME, new Blob([html], { type: 'text/html;charset=UTF-8' }));
-          toast('下载已触发', '请在另存为窗口中确认保存。', 'success', [], { key: 'download-local-index' });
-        } catch (error) {
-          console.warn('download index failed', url, error);
-          toast('下载失败', '当前站点没有返回 index.html，请稍后重试。', 'error', [], { key: 'download-local-index' });
-        }
-      }
-
       function createDerivedRuntimeSeed(mode = state.parserMode, sourceKind = 'timeline') {
         return {
           viewSignature: '',
@@ -11805,6 +11428,36 @@
         }
       }
 
+      function exportParserConfig() {
+        const payload = buildGraphConfigExportPayload();
+        const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        downloadFile('webseriallite-parser-config.json', blob);
+        toast('解析配置已导出', '当前解析配置已保存，方便后续复用。', 'success');
+      }
+
+      async function loadParserConfigFile(file) {
+        if (!file) return;
+        try {
+          const payload = JSON.parse(await file.text());
+          if (payload.parserMode) state.parserMode = payload.parserMode;
+          if (payload.parser) {
+            Object.assign(state.parser, payload.parser);
+            if (!Array.isArray(state.parser.binarySchema)) {
+              state.parser.binarySchema = [];
+            }
+          }
+          invalidateDerivedCaches();
+          syncParserInputs();
+          scheduleRefresh();
+          toast('解析配置已载入', '新的解析规则已经生效。', 'success');
+        } catch (error) {
+          console.error(error);
+          toast('载入失败', '解析配置文件格式无效。', 'error');
+        } finally {
+          refs.parserConfigFileInput.value = '';
+        }
+      }
+
       function syncParserInputs() {
         refs.textParseRule.value = state.parser.textRule;
         ensureBinarySchemaRow();
@@ -11875,6 +11528,10 @@
         };
       }
 
+      function snapshotParserGraphConfig() {
+        return buildGraphConfigExportPayload();
+      }
+
       function hydrateChartFromConfig(rawChart) {
         const nextType = rawChart?.chartType === 'fft' ? 'fft' : 'time';
         const base = createChart(nextType);
@@ -11900,179 +11557,6 @@
         base.viewBaseYMax = rawChart?.view?.baseYMax ?? base.viewBaseYMax;
         base.bindingViewY = JSON.parse(JSON.stringify(rawChart?.view?.perChannelY || {}));
         return base;
-      }
-
-      function readLocalPrefs() {
-        try {
-          const raw = localStorage.getItem(LOCAL_PREFS_KEY);
-          if (!raw) return null;
-          const payload = JSON.parse(raw);
-          return payload && typeof payload === 'object' ? payload : null;
-        } catch (error) {
-          console.warn('load local prefs failed', error);
-          return null;
-        }
-      }
-
-      function normalizePersistedSettings(settings) {
-        const source = settings && typeof settings === 'object' ? settings : {};
-        return {
-          baudRate: String(source.baudRate || state.settings.baudRate),
-          dataBits: [7, 8].includes(Number(source.dataBits)) ? Number(source.dataBits) : state.settings.dataBits,
-          stopBits: [1, 2].includes(Number(source.stopBits)) ? Number(source.stopBits) : state.settings.stopBits,
-          parity: ['none', 'even', 'odd'].includes(source.parity) ? source.parity : state.settings.parity,
-          releaseSignalsOnBlur: Boolean(source.releaseSignalsOnBlur),
-          flowControl: source.flowControl === 'hardware' ? 'hardware' : 'none',
-          signalDtr: Boolean(source.signalDtr),
-          signalRts: Boolean(source.signalRts),
-          signalBreak: Boolean(source.signalBreak),
-          autoReconnect: typeof source.autoReconnect === 'boolean' ? source.autoReconnect : state.settings.autoReconnect,
-          rxDisplayMode: source.rxDisplayMode === 'hex' ? 'hex' : 'text',
-          textEncoding: ['utf-8', 'ascii', 'latin1', 'utf-16le'].includes(source.textEncoding) ? source.textEncoding : state.settings.textEncoding,
-          appendTimestamp: typeof source.appendTimestamp === 'boolean' ? source.appendTimestamp : state.settings.appendTimestamp,
-          sendMode: source.sendMode === 'hex' ? 'hex' : 'ascii',
-          newlineMode: ['r', 'n', 'rn'].includes(source.newlineMode) ? source.newlineMode : state.settings.newlineMode,
-          appendNewline: typeof source.appendNewline === 'boolean' ? source.appendNewline : state.settings.appendNewline
-        };
-      }
-
-      function applyLocalPrefsSnapshot(snapshot) {
-        if (!snapshot) return;
-        restoringLocalPrefs = true;
-        try {
-          state.theme = snapshot.theme === 'dark' ? 'dark' : snapshot.theme === 'light' ? 'light' : state.theme;
-          state.layoutExpanded = Boolean(snapshot.layout?.expanded);
-          state.ui.sidebarCollapsed = Boolean(snapshot.layout?.sidebarCollapsed);
-          state.settings = normalizePersistedSettings(snapshot.settings);
-
-          if (snapshot.parser || Array.isArray(snapshot.charts)) {
-            applyParserGraphStateSnapshot({
-              mode: snapshot.parser?.mode,
-              text: snapshot.parser?.text,
-              binary: snapshot.parser?.binary,
-              charts: Array.isArray(snapshot.charts) ? snapshot.charts : []
-            });
-          }
-
-          state.modules.autoSendOpen = Boolean(snapshot.modules?.autoSendOpen);
-          state.modules.conditionSendOpen = Boolean(snapshot.modules?.conditionSendOpen);
-          state.modules.presetSendOpen = Boolean(snapshot.modules?.presetSendOpen);
-
-          const autoItems = Array.isArray(snapshot.autoSend?.queue) ? snapshot.autoSend.queue : [];
-          state.autoSend.enabled = Boolean(snapshot.autoSend?.enabled);
-          state.autoSend.intervalMs = Math.max(100, Number(snapshot.autoSend?.intervalMs) || state.autoSend.intervalMs);
-          state.autoSend.queue = autoItems.map((item) => ({
-            id: uid('queue'),
-            enabled: item?.enabled !== false,
-            payload: String(item?.payload || '')
-          }));
-
-          const rules = Array.isArray(snapshot.conditionSend?.rules) ? snapshot.conditionSend.rules : [];
-          state.conditionSend.enabled = Boolean(snapshot.conditionSend?.enabled);
-          state.conditionSend.rules = rules.map((rule) => ({
-            id: uid('rule'),
-            enabled: rule?.enabled !== false,
-            matchType: rule?.matchType === 'exact' ? 'exact' : 'contains',
-            pattern: String(rule?.pattern || ''),
-            response: String(rule?.response || '')
-          }));
-
-          const presets = Array.isArray(snapshot.presetSend?.items) ? snapshot.presetSend.items : [];
-          state.presetSend.enabled = Boolean(snapshot.presetSend?.enabled);
-          state.presetSend.items = presets.map((item) => ({
-            id: uid('queue'),
-            enabled: item?.enabled !== false,
-            payload: String(item?.payload || ''),
-            expected: String(item?.expected || '')
-          }));
-
-          state.sendDraft.text = String(snapshot.sendDraft?.text || '');
-          state.sendDraft.hex = sanitizeHexInputValue(snapshot.sendDraft?.hex || '');
-        } finally {
-          restoringLocalPrefs = false;
-        }
-      }
-
-      function buildLocalPrefsSnapshot() {
-        captureSettingsInputsFromRefs();
-        captureSendDraftFromInput();
-        return {
-          appVersion: VERSION,
-          savedAt: Date.now(),
-          theme: state.theme,
-          layout: {
-            expanded: Boolean(state.layoutExpanded),
-            sidebarCollapsed: Boolean(state.ui.sidebarCollapsed)
-          },
-          settings: { ...state.settings },
-          parser: snapshotParserGraphState(),
-          charts: (state.charts || []).map((chart) => snapshotChartConfig(chart)),
-          modules: {
-            autoSendOpen: Boolean(state.modules.autoSendOpen),
-            conditionSendOpen: Boolean(state.modules.conditionSendOpen),
-            presetSendOpen: Boolean(state.modules.presetSendOpen)
-          },
-          autoSend: {
-            enabled: Boolean(state.autoSend.enabled),
-            intervalMs: Math.max(100, Number(state.autoSend.intervalMs) || 1000),
-            queue: (state.autoSend.queue || []).map((item) => ({
-              enabled: item.enabled !== false,
-              payload: String(item.payload || '')
-            }))
-          },
-          conditionSend: {
-            enabled: Boolean(state.conditionSend.enabled),
-            rules: (state.conditionSend.rules || []).map((rule) => ({
-              enabled: rule.enabled !== false,
-              matchType: rule.matchType === 'exact' ? 'exact' : 'contains',
-              pattern: String(rule.pattern || ''),
-              response: String(rule.response || '')
-            }))
-          },
-          presetSend: {
-            enabled: Boolean(state.presetSend.enabled),
-            items: (state.presetSend.items || []).map((item) => ({
-              enabled: item.enabled !== false,
-              payload: String(item.payload || ''),
-              expected: String(item.expected || '')
-            }))
-          },
-          sendDraft: {
-            text: String(state.sendDraft.text || ''),
-            hex: sanitizeHexInputValue(state.sendDraft.hex || '')
-          }
-        };
-      }
-
-      function persistLocalPrefsNow() {
-        if (restoringLocalPrefs) return;
-        if (localPrefsTimerId) {
-          clearTimeout(localPrefsTimerId);
-          localPrefsTimerId = 0;
-        }
-        try {
-          localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify(buildLocalPrefsSnapshot()));
-        } catch (error) {
-          console.warn('save local prefs failed', error);
-        }
-      }
-
-      function scheduleLocalPrefsSave() {
-        if (restoringLocalPrefs) return;
-        if (localPrefsTimerId) clearTimeout(localPrefsTimerId);
-        localPrefsTimerId = window.setTimeout(() => {
-          localPrefsTimerId = 0;
-          persistLocalPrefsNow();
-        }, LOCAL_PREFS_DEBOUNCE_MS);
-      }
-
-      function shouldPersistAfterEvent(event) {
-        const target = event.target;
-        if (!(target instanceof Element)) return false;
-        return Boolean(target.closest(
-          '#theme-toggle-btn, #layout-toggle-btn, #serial-mode-btn, #parser-mode-btn, '
-          + '.config-panel, .parser-panel, .charts-panel, #send-panel, #chart-list'
-        ));
       }
 
       async function copyParserConfig() {
@@ -12107,7 +11591,6 @@
           invalidateDerivedCaches();
           syncParserInputs();
           scheduleRefresh();
-          scheduleLocalPrefsSave();
           toast('已粘贴', '已从剪贴板载入图形解析配置。', 'success');
         } catch (error) {
           toast('粘贴失败', '剪贴板中未检测到有效的图形解析配置。', 'warn');
@@ -12154,7 +11637,6 @@
             refs.rightColumn?.scrollTo({ top: 0, behavior: 'smooth' });
           });
         }
-        scheduleLocalPrefsSave();
         scheduleRefresh();
       }
 
@@ -12523,7 +12005,6 @@
         drag.surface.style.cursor = '';
         state.ui.chartDrag = null;
         clearChartAxisHover();
-        scheduleLocalPrefsSave();
       }
 
       function handleChartWheel(event) {
@@ -12565,7 +12046,6 @@
         }
         syncChartViewUi(chart);
         drawChart(chart);
-        scheduleLocalPrefsSave();
       }
 
       function handleChartClick(event) {
@@ -12783,24 +12263,6 @@
       function attachEventListeners() {
         refs.themeToggleBtn.addEventListener('click', toggleTheme);
         refs.systemMenuBtn.addEventListener('click', () => toggleMenu(refs.systemMenu));
-        refs.downloadLocalLink?.addEventListener('click', downloadLocalIndexHtml);
-        refs.versionInfoBtn?.addEventListener('click', (event) => {
-          event.stopPropagation();
-          if (event.target instanceof Element && event.target.closest('#online-mode-chip')) {
-            if (isLocalOfflineRuntime()) {
-              window.open(ONLINE_VERSION_URL, '_blank', 'noopener,noreferrer');
-              return;
-            }
-          }
-          openVersionModal();
-        });
-        refs.versionModalClose?.addEventListener('click', closeVersionModal);
-        refs.versionModalBackdrop?.addEventListener('click', (event) => {
-          if (event.target === refs.versionModalBackdrop) closeVersionModal();
-        });
-        document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') closeVersionModal();
-        });
         document.addEventListener('click', closeMenus);
 
         refs.connectBtn.addEventListener('click', () => {
@@ -12877,7 +12339,6 @@
         refs.textEncoding.addEventListener('change', () => { state.settings.textEncoding = refs.textEncoding.value; scheduleRefresh(); });
         refs.appendTimestamp.addEventListener('change', () => { state.settings.appendTimestamp = refs.appendTimestamp.checked; scheduleRefresh(); });
         refs.sendMode.addEventListener('change', () => {
-          captureSendDraftFromInput();
           state.settings.sendMode = refs.sendMode.checked ? 'hex' : 'ascii';
           syncSendInputModeUI();
         });
@@ -12886,6 +12347,7 @@
         refs.layoutToggleBtn.addEventListener('click', toggleLayoutMode);
         refs.serialModeBtn?.addEventListener('click', toggleLayoutMode);
         refs.parserModeBtn?.addEventListener('click', toggleLayoutMode);
+        refs.sidebarCollapseBtn?.addEventListener('click', toggleSidebarCollapse);
         refs.mobileConfigBackdrop.addEventListener('click', () => {
           closeTimelinePicker();
           setCompactConfigOpen(false);
@@ -12976,10 +12438,7 @@
           if (event.target.closest('#timeline-slider')) return;
           if (event.target.closest('#timeline-picker-btn')) return;
           if (event.target.closest('#timeline-freeze-btn')) return;
-          if (event.target.closest('#timeline-picker-panel')) return;
-          if (refs.timelineRibbonShell.classList.contains('picker-open')) {
-            closeTimelinePicker();
-          } else {
+          if (!refs.timelineRibbonShell.classList.contains('picker-open')) {
             toggleTimelinePicker();
           }
         });
@@ -13137,21 +12596,14 @@
         refs.clearChartsBtn.addEventListener('click', () => {
           clearRealtimeHistoryData();
         });
-        refs.chartList.addEventListener('input', (event) => {
-          handleChartInput(event);
-          scheduleLocalPrefsSave();
-        });
+        refs.chartList.addEventListener('input', handleChartInput);
         refs.chartList.addEventListener('click', (event) => {
           if (event.target.closest('.chart-toolbar') || event.target.closest('.chart-order-tools') || event.target.closest('.chart-axis-binding-picker')) {
             event.stopPropagation();
           }
           handleChartClick(event);
-          scheduleLocalPrefsSave();
         });
-        refs.chartList.addEventListener('change', (event) => {
-          handleChartInput(event);
-          scheduleLocalPrefsSave();
-        });
+        refs.chartList.addEventListener('change', handleChartInput);
         refs.chartList.addEventListener('mouseover', (event) => {
           const panel = event.target.closest?.('[data-chart-id]');
           if (!panel) return;
@@ -13269,14 +12721,6 @@
         refs.presetSendList.addEventListener('change', handlePresetItemInput);
         refs.presetSendList.addEventListener('click', handlePresetItemClick);
 
-        ['input', 'change', 'click'].forEach((type) => {
-          document.addEventListener(type, (event) => {
-            if (shouldPersistAfterEvent(event)) {
-              scheduleLocalPrefsSave();
-            }
-          });
-        });
-
         if (navigator.serial?.addEventListener) {
           navigator.serial.addEventListener('disconnect', async (event) => {
             const port = event?.target || event?.port || null;
@@ -13303,7 +12747,6 @@
 
       function initializeDefaults() {
         localStorage.removeItem('wsl-layout');
-        applyLocalPrefsSnapshot(readLocalPrefs());
         if (refs.version) refs.version.textContent = `v${VERSION}`;
         state.settings.newlineMode = ['r', 'n', 'rn'].includes(state.settings.newlineMode) ? state.settings.newlineMode : 'rn';
         refs.baudRate.value = state.settings.baudRate;
@@ -13340,7 +12783,6 @@
           state.presetSend.items.push({ id: uid('queue'), enabled: true, payload: 'PING', expected: 'PONG' });
         }
         state.ui.windowFocused = document.visibilityState === 'visible' && document.hasFocus();
-        syncVersionDisplay();
         applyTheme();
         applyLayout(false);
         setAdvancedPanel();
@@ -13351,16 +12793,13 @@
         markUiDirty();
         renderDirty();
         renderSendConfigLists('all');
-        syncAutoSendRuntime();
         syncCustomSelects(appEl);
         addSystemLog('系统已初始化，正在等待串口数据或导入的时间线。', 'meta');
         addSystemLog('请使用 HTTPS 或 localhost，以便浏览器启用 Web Serial API。', 'meta');
         requestAnimationFrame(() => requestAnimationFrame(forceTerminalToLatest));
-        openInitialVersionModalIfNeeded();
       }
 
       window.addEventListener('beforeunload', () => {
-        persistLocalPrefsNow();
         stopAutoSendTimer();
         if (state.serial.connected) {
           disconnectSerial('manual');
