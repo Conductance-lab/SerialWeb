@@ -20,8 +20,8 @@
       };
       const initialPrefs = readInitialPrefs();
       const getInitialTheme = () => {
-        if (initialPrefs?.theme === 'dark' || initialPrefs?.theme === 'light') {
-          return initialPrefs.theme;
+        if (initialPrefs?.theme === 'system' || initialPrefs?.theme === 'dark' || initialPrefs?.theme === 'light') {
+          return initialPrefs.theme === 'system' ? (browserThemeQuery.matches ? 'dark' : 'light') : initialPrefs.theme;
         }
         return browserThemeQuery.matches ? 'dark' : 'light';
       };
@@ -98,34 +98,35 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f3efe7;
+      --bg: #ffffff;
       --bg-elevated: rgba(255, 255, 255, 0.92);
       --bg-panel: rgba(255, 255, 255, 0.84);
       --bg-panel-strong: rgba(255, 255, 255, 0.94);
-      --bg-terminal: #f7fbff;
-      --border: rgba(42, 61, 82, 0.12);
-      --border-strong: rgba(42, 61, 82, 0.18);
-      --text: #193048;
-      --text-soft: #617186;
-      --accent: #0e9f6e;
-      --accent-strong: #057a55;
-      --accent-soft: rgba(14, 159, 110, 0.14);
-      --signal: #1d7af2;
+      --bg-terminal: #f6f6f7;
+      --border: rgba(60, 60, 67, 0.16);
+      --border-strong: rgba(60, 60, 67, 0.24);
+      --text: #3c3c43;
+      --text-soft: #67676c;
+      --accent: #5672cd;
+      --accent-strong: #3451b2;
+      --accent-soft: rgba(100, 108, 255, 0.14);
+      --signal: #3a5ccc;
       --warning: #d97706;
-      --danger: #c2410c;
-      --shadow: 0 18px 48px rgba(28, 44, 61, 0.12);
-      --shadow-soft: 0 10px 30px rgba(28, 44, 61, 0.08);
-      --grid-gap: 18px;
-      --radius: 22px;
-      --radius-small: 14px;
-      --header-height: 62px;
-      --compact-float-top: 102px;
+      --danger: #e0575e;
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.10);
+      --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.07);
+      --grid-gap: 10px;
+      --radius: 14px;
+      --radius-small: 10px;
+      --header-height: 52px;
+      --compact-float-top: 92px;
       --overlay-backdrop: rgba(12, 18, 24, 0.46);
       --overlay-blur: blur(10px);
-      --panel-glow: radial-gradient(circle at top right, rgba(14, 159, 110, 0.18), transparent 50%);
-      --timeline-fill: linear-gradient(90deg, rgba(29, 122, 242, 0.9), rgba(14, 159, 110, 0.86));
-      --scrollbar-thumb: rgba(14, 159, 110, 0.46);
-      --scrollbar-thumb-hover: rgba(5, 122, 85, 0.66);
+      --panel-glow: none;
+      --timeline-fill: var(--signal);
+      --brand-green: rgba(34, 197, 94, 0.14);
+      --scrollbar-thumb: rgba(86, 114, 205, 0.46);
+      --scrollbar-thumb-hover: rgba(52, 81, 178, 0.66);
       --font-ui: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
     }
@@ -133,27 +134,28 @@
     :root.theme-dark,
     body.theme-dark {
       color-scheme: dark;
-      --bg: #0d1318;
-      --bg-elevated: rgba(14, 22, 29, 0.92);
-      --bg-panel: rgba(16, 25, 33, 0.86);
-      --bg-panel-strong: rgba(18, 28, 37, 0.96);
-      --bg-terminal: #091117;
-      --border: rgba(146, 181, 201, 0.12);
-      --border-strong: rgba(146, 181, 201, 0.22);
-      --text: #e5f0f5;
-      --text-soft: #8fa8b8;
-      --accent: #44d29f;
-      --accent-strong: #17b37b;
-      --accent-soft: rgba(68, 210, 159, 0.18);
-      --signal: #67aefb;
+      --bg: #1b1b1f;
+      --bg-elevated: rgba(32, 33, 39, 0.92);
+      --bg-panel: rgba(32, 33, 39, 0.86);
+      --bg-panel-strong: rgba(32, 33, 39, 0.96);
+      --bg-terminal: #161618;
+      --border: rgba(60, 63, 68, 0.32);
+      --border-strong: rgba(60, 63, 68, 0.44);
+      --text: #dfdfd6;
+      --text-soft: #98989f;
+      --accent: #818cf8;
+      --accent-strong: #c7d2fe;
+      --accent-soft: rgba(129, 140, 248, 0.16);
+      --signal: #6366f1;
       --warning: #ffb14d;
-      --danger: #ff8a5b;
+      --danger: #f87171;
       --shadow: 0 24px 54px rgba(0, 0, 0, 0.38);
       --shadow-soft: 0 12px 32px rgba(0, 0, 0, 0.28);
-      --panel-glow: radial-gradient(circle at top right, rgba(29, 122, 242, 0.2), transparent 50%);
-      --timeline-fill: linear-gradient(90deg, rgba(103, 174, 251, 0.95), rgba(68, 210, 159, 0.88));
-      --scrollbar-thumb: rgba(68, 210, 159, 0.5);
-      --scrollbar-thumb-hover: rgba(68, 210, 159, 0.72);
+      --panel-glow: none;
+      --timeline-fill: var(--signal);
+      --brand-green: rgba(34, 197, 94, 0.14);
+      --scrollbar-thumb: rgba(129, 140, 248, 0.48);
+      --scrollbar-thumb-hover: rgba(99, 102, 241, 0.7);
     }
 
     * {
@@ -197,45 +199,42 @@
     }
 
     *::-webkit-scrollbar-button:vertical:decrement {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 1.5 7 5.8H1z' fill='%23057a55'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 1.5 7 5.8H1z' fill='%233451b2'/%3E%3C/svg%3E");
     }
 
     *::-webkit-scrollbar-button:vertical:increment {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6.5 1 2.2h6z' fill='%23057a55'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6.5 1 2.2h6z' fill='%233451b2'/%3E%3C/svg%3E");
     }
 
     *::-webkit-scrollbar-button:horizontal:decrement {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.5 4 5.8 1v6z' fill='%23057a55'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.5 4 5.8 1v6z' fill='%233451b2'/%3E%3C/svg%3E");
     }
 
     *::-webkit-scrollbar-button:horizontal:increment {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 4 2.2 7V1z' fill='%23057a55'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 4 2.2 7V1z' fill='%233451b2'/%3E%3C/svg%3E");
     }
 
     body.theme-dark *::-webkit-scrollbar-button:vertical:decrement {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 1.5 7 5.8H1z' fill='%2344d29f'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 1.5 7 5.8H1z' fill='%236366f1'/%3E%3C/svg%3E");
     }
 
     body.theme-dark *::-webkit-scrollbar-button:vertical:increment {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6.5 1 2.2h6z' fill='%2344d29f'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6.5 1 2.2h6z' fill='%236366f1'/%3E%3C/svg%3E");
     }
 
     body.theme-dark *::-webkit-scrollbar-button:horizontal:decrement {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.5 4 5.8 1v6z' fill='%2344d29f'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.5 4 5.8 1v6z' fill='%236366f1'/%3E%3C/svg%3E");
     }
 
     body.theme-dark *::-webkit-scrollbar-button:horizontal:increment {
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 4 2.2 7V1z' fill='%2344d29f'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.5 4 2.2 7V1z' fill='%236366f1'/%3E%3C/svg%3E");
     }
 
     html,
     body {
       margin: 0;
       min-height: 100%;
-      background:
-        radial-gradient(circle at top left, rgba(29, 122, 242, 0.12), transparent 26%),
-        radial-gradient(circle at bottom right, rgba(14, 159, 110, 0.12), transparent 24%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-family: var(--font-ui);
       overflow: hidden;
@@ -245,27 +244,7 @@
 
     body::before,
     body::after {
-      content: "";
-      position: fixed;
-      width: 38vw;
-      height: 38vw;
-      border-radius: 50%;
-      pointer-events: none;
-      filter: none;
-      opacity: 0.1;
-      z-index: 0;
-    }
-
-    body::before {
-      top: -15vw;
-      right: -12vw;
-      background: rgba(29, 122, 242, 0.22);
-    }
-
-    body::after {
-      bottom: -16vw;
-      left: -12vw;
-      background: rgba(14, 159, 110, 0.18);
+      display: none;
     }
 
     button,
@@ -303,14 +282,14 @@
       position: relative;
       z-index: 1;
       height: 100vh;
-      padding: 18px;
+      padding: 0 8px 8px;
       display: grid;
       grid-template-rows: auto 1fr;
-      gap: 18px;
+      gap: 6px;
     }
 
     .panel {
-      background: var(--panel-glow), var(--bg-panel);
+      background: var(--bg-panel);
       border: 1px solid var(--border);
       box-shadow: var(--shadow-soft);
       border-radius: var(--radius);
@@ -322,13 +301,13 @@
       min-height: var(--header-height);
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 8px 12px;
-      padding: 8px 12px;
+      gap: 6px 8px;
+      padding: 5px 8px;
       align-items: stretch;
-      background: linear-gradient(140deg, rgba(255,255,255,0.36), transparent 35%), var(--bg-elevated);
+      background: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: calc(var(--radius) + 4px);
-      box-shadow: var(--shadow);
+      border-radius: 0 0 calc(var(--radius) + 4px) calc(var(--radius) + 4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
       backdrop-filter: none;
     }
 
@@ -354,22 +333,26 @@
     .status-pill {
       display: inline-grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 6px;
+      gap: 3px;
       align-items: center;
       min-width: 0;
       width: max-content;
       max-width: 100%;
-      border-radius: 16px;
-      padding: 0 0 0 14px;
+      border-radius: 14px;
+      padding: 0 0 0 8px;
       border: 1px solid var(--border-strong);
-      background: rgba(255, 255, 255, 0.22);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.12), transparent 50%),
+        rgba(255, 255, 255, 0.22);
       cursor: pointer;
       transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
       justify-self: start;
     }
 
     body.theme-dark .status-pill {
-      background: rgba(15, 24, 32, 0.72);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.12), transparent 50%),
+        rgba(15, 24, 32, 0.72);
     }
 
     .status-pill:hover,
@@ -379,13 +362,13 @@
 
     .status-pill:focus-visible {
       outline: none;
-      border-color: rgba(29, 122, 242, 0.28);
-      box-shadow: 0 0 0 4px rgba(29, 122, 242, 0.1);
+      border-color: rgba(86, 114, 205, 0.28);
+      box-shadow: 0 0 0 4px rgba(86, 114, 205, 0.1);
     }
 
     .status-pill.is-quick-active {
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.18), transparent 82%),
+        radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.14), transparent 50%),
         rgba(186, 194, 204, 0.34);
       border-color: rgba(150, 160, 172, 0.42);
       box-shadow: 0 10px 20px rgba(98, 112, 128, 0.14);
@@ -393,7 +376,7 @@
 
     body.theme-dark .status-pill.is-quick-active {
       background:
-        linear-gradient(180deg, rgba(255,255,255,0.08), transparent 82%),
+        radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.14), transparent 50%),
         rgba(78, 88, 101, 0.82);
     }
 
@@ -439,33 +422,42 @@
     .status-pill-copy {
       min-width: 0;
       display: grid;
-      gap: 2px;
       line-height: 1.05;
       align-content: center;
+      padding: 0 5px;
     }
 
     .status-pill-title {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
       letter-spacing: 0.03em;
       line-height: 1;
     }
 
     .status-pill-subtitle {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text-soft);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .status-pill:hover .status-pill-subtitle {
+      font-size: 0;
+    }
+
+    .status-pill:hover .status-pill-subtitle::after {
+      content: attr(data-hover);
+      font-size: 9px;
+    }
+
     .logo-mode-switch {
       position: relative;
-      width: 84px;
-      min-width: 84px;
-      max-width: 84px;
+      width: 80px;
+      min-width: 80px;
+      max-width: 80px;
       display: grid;
-      grid-template-columns: repeat(2, 42px);
+      grid-template-columns: repeat(2, 40px);
       gap: 0;
       padding: 0;
       border-radius: inherit;
@@ -478,37 +470,43 @@
       top: 0;
       bottom: 0;
       left: 0;
-      width: 42px;
+      width: 40px;
       border-radius: inherit;
       background: var(--accent);
       border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 10px 20px rgba(14, 159, 110, 0.2);
+      box-shadow: 0 10px 20px rgba(86, 114, 205, 0.2);
       transition: transform 0.2s ease;
       pointer-events: none;
     }
 
     .logo-mode-switch.parser-active::before,
     body.layout-expanded .logo-mode-switch::before {
-      transform: translateX(42px);
+      transform: translateX(40px);
     }
 
     .logo-mode-btn {
       position: relative;
       z-index: 1;
-      width: 42px;
-      height: 42px;
-      padding: 4px 2px;
+      width: 40px;
+      min-height: 40px;
+      padding: 1;
       display: grid;
       grid-template-rows: auto auto;
       gap: 2px;
       place-items: center;
+      align-content: center;
       border-radius: inherit;
       color: var(--text-soft);
       transition: color 0.16s ease;
     }
 
     .logo-mode-btn.is-active {
-      color: #f4fff9;
+      color: #eef2ff;
+    }
+
+    #serial-mode-btn .logo-mode-icon,
+    #serial-mode-btn .logo-mode-text {
+      transform: translateX(1px);
     }
 
     body.layout-expanded #serial-mode-btn {
@@ -516,7 +514,7 @@
     }
 
     body.layout-expanded #parser-mode-btn {
-      color: #f4fff9;
+      color: #eef2ff;
     }
 
     .logo-mode-icon {
@@ -564,8 +562,8 @@
     .primary-btn,
     .wide-send-btn {
       background: var(--accent);
-      color: #f4fff9;
-      box-shadow: 0 12px 24px rgba(14, 159, 110, 0.24);
+      color: #eef2ff;
+      box-shadow: 0 12px 24px rgba(86, 114, 205, 0.24);
     }
 
     .secondary-btn,
@@ -622,10 +620,9 @@
 
     .topbar .icon-btn,
     .topbar .mini-btn {
-      width: 32px;
-      height: 32px;
-      min-width: 32px;
-      font-size: 13px;
+      width: 34px;
+      min-width: 34px;
+      font-size: 12px;
     }
 
     .timeline-combo {
@@ -634,12 +631,8 @@
       padding: 6px 8px;
       border-radius: 18px;
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent 55%), var(--bg-panel);
+      background: var(--bg-panel);
       min-width: 0;
-    }
-
-    body.theme-dark .timeline-combo {
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 55%), var(--bg-panel);
     }
 
     .timeline-select-row {
@@ -809,8 +802,8 @@
 
     .custom-select.open .custom-select-trigger,
     .custom-select-trigger:focus {
-      border-color: rgba(29, 122, 242, 0.52);
-      box-shadow: 0 0 0 4px rgba(29, 122, 242, 0.12);
+      border-color: rgba(86, 114, 205, 0.52);
+      box-shadow: 0 0 0 4px rgba(86, 114, 205, 0.12);
       outline: none;
     }
 
@@ -854,7 +847,7 @@
     }
 
     .custom-select-option.active {
-      background: rgba(29, 122, 242, 0.12);
+      background: rgba(86, 114, 205, 0.12);
       color: var(--accent);
     }
 
@@ -902,8 +895,8 @@
     #send-input:focus,
     .timeline-picker select:focus,
     .select-wrap select:focus {
-      border-color: rgba(29, 122, 242, 0.52);
-      box-shadow: 0 0 0 4px rgba(29, 122, 242, 0.12);
+      border-color: rgba(86, 114, 205, 0.52);
+      box-shadow: 0 0 0 4px rgba(86, 114, 205, 0.12);
     }
 
     .menu-anchor {
@@ -912,14 +905,14 @@
 
     .floating-menu {
       position: absolute;
-      top: calc(100% + 10px);
+      top: calc(100% + 8px);
       right: 0;
-      width: 280px;
+      width: 300px;
       background: var(--bg-panel-strong);
-      border-radius: 18px;
-      border: 1px solid var(--border);
+      border-radius: 14px;
+      border: 1px solid var(--border-strong);
       box-shadow: var(--shadow);
-      padding: 10px;
+      padding: 8px;
       display: none;
       z-index: 90;
     }
@@ -936,20 +929,25 @@
       display: block;
     }
 
-    .floating-menu button,
+    .floating-menu button:not(.menu-theme-opt),
     .floating-menu a,
     .floating-menu .menu-placeholder {
       width: 100%;
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 10px;
+      padding: 8px 10px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 12px;
       background: transparent;
       border: 1px solid transparent;
-      min-height: 42px;
+      min-height: 36px;
+      transition: background 0.16s ease;
+    }
+
+    .floating-menu a:hover {
+      background: var(--accent-soft);
     }
 
     .floating-menu .menu-static-line {
@@ -957,40 +955,48 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 10px;
+      padding: 8px 10px;
       color: var(--text);
-      font-size: 13px;
-      min-height: 42px;
-      background: rgba(29, 122, 242, 0.06);
-      border: 1px solid rgba(29, 122, 242, 0.08);
+      font-size: 12px;
+      min-height: 36px;
+      background: transparent;
+      border: 1px solid transparent;
       cursor: default;
       user-select: text;
     }
 
-    .floating-menu .version-info-btn {
+    .floating-menu button.version-info-btn {
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
+      min-height: 28px;
       cursor: pointer;
       user-select: none;
+      background: transparent;
+      border: 1px solid transparent;
+      transition: background 0.16s ease;
+    }
+
+    .floating-menu button.version-info-btn:hover,
+    .floating-menu button.version-info-btn:focus-visible {
+      background: var(--accent-soft);
     }
 
     .floating-menu .menu-config-line {
       display: flex;
       align-items: center;
-      gap: 6px;
-      min-height: 42px;
-      padding: 6px 8px;
-      border-radius: 12px;
-      background: rgba(29, 122, 242, 0.04);
-      border: 1px solid rgba(29, 122, 242, 0.08);
+      gap: 5px;
+      min-height: 34px;
+      padding: 5px 6px;
+      border-radius: 10px;
+      background: rgba(86, 114, 205, 0.06);
     }
 
     .floating-menu .menu-config-label,
     .floating-menu .menu-config-warning {
       flex: 0 0 auto;
       color: var(--text-soft);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -1005,17 +1011,145 @@
 
     .floating-menu .menu-config-line button {
       width: auto;
-      min-height: 30px;
+      min-height: 28px;
       flex: 1 1 0;
       justify-content: center;
-      padding: 6px 8px;
-      border-radius: 9px;
-      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      font-size: 11px;
       white-space: nowrap;
+      background: var(--bg-panel-strong);
+      border: 1px solid var(--border-strong);
+      transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    body.theme-dark .floating-menu .menu-config-line button {
+      background: rgba(18, 28, 37, 0.72);
+    }
+
+    .floating-menu .menu-config-line button:hover {
+      transform: translateY(-1px);
+      background: var(--accent-soft);
+      border-color: rgba(86, 114, 205, 0.3);
+    }
+
+    .floating-menu .menu-link-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .floating-menu .menu-link-row a {
+      flex: 1 1 0;
+      min-width: 0;
+      justify-content: flex-start;
+    }
+
+    .floating-menu .menu-link-row a:hover {
+      background: var(--accent-soft);
     }
 
     .floating-menu .menu-config-line button.danger-btn {
+      flex: 1 1 0;
+      background: rgba(194, 65, 12, 0.08);
+      border-color: rgba(194, 65, 12, 0.2);
+      color: var(--danger);
+    }
+
+    body.theme-dark .floating-menu .menu-config-line button.danger-btn {
+      background: rgba(127, 29, 29, 0.28);
+      border-color: rgba(248, 113, 113, 0.22);
+      color: #fca5a5;
+    }
+
+    .floating-menu .menu-config-line button.danger-btn:hover {
+      background: rgba(194, 65, 12, 0.14);
+      border-color: rgba(194, 65, 12, 0.3);
+    }
+
+    body.theme-dark .floating-menu .menu-config-line button.danger-btn:hover {
+      background: rgba(153, 27, 27, 0.36);
+      border-color: rgba(248, 113, 113, 0.34);
+    }
+
+    .floating-menu .menu-theme-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 5px 6px;
+      border-radius: 10px;
+      background: rgba(86, 114, 205, 0.06);
+      margin-top: 4px;
+    }
+
+    .floating-menu .menu-theme-label {
       flex: 0 0 auto;
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .menu-theme-group {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-panel-strong);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+    }
+
+    .menu-theme-group::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: calc(33.333%);
+      border-radius: 8px;
+      background: var(--accent);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 10px 20px rgba(86, 114, 205, 0.2);
+      transition: transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .menu-theme-group.pos-light::before {
+      transform: translateX(100%);
+    }
+
+    .menu-theme-group.pos-dark::before {
+      transform: translateX(200%);
+    }
+
+    .menu-theme-opt {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+      min-height: 28px;
+      padding: 4px 6px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: color 0.16s ease;
+    }
+
+    .menu-theme-opt.is-active {
+      color: #eef2ff;
     }
 
     .runtime-mode-label {
@@ -1030,18 +1164,17 @@
       flex: 0 0 auto;
       border-radius: 999px;
       padding: 3px 8px;
-      border: 1px solid rgba(29, 122, 242, 0.2);
-      background: rgba(29, 122, 242, 0.1);
-      color: var(--signal);
+      border: 1px solid rgba(86, 114, 205, 0.22);
+      background: rgba(86, 114, 205, 0.1);
+      color: var(--accent-strong);
       font-size: 11px;
       font-weight: 800;
       line-height: 1.3;
     }
 
-    .floating-menu button:hover,
-    .floating-menu a:hover {
-      background: rgba(29, 122, 242, 0.08);
-      border-color: rgba(29, 122, 242, 0.12);
+    .floating-menu button:not(.menu-theme-opt):hover,
+    .floating-menu button:not(.menu-theme-opt):focus-visible {
+      background: var(--accent-soft);
     }
 
     .menu-placeholder {
@@ -1182,7 +1315,7 @@
       height: 8px;
       border-radius: 999px;
       overflow: hidden;
-      background: rgba(14, 159, 110, 0.14);
+      background: rgba(86, 114, 205, 0.14);
     }
 
     .live-indicator-inline .live-bar {
@@ -1194,7 +1327,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(14, 159, 110, 0.82), transparent);
+      background: linear-gradient(90deg, transparent, rgba(86, 114, 205, 0.82), transparent);
       animation: liveSweep 1.2s linear infinite;
     }
 
@@ -1202,6 +1335,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-end;
+      min-height: 40px;
     }
 
     .corner-actions {
@@ -1216,9 +1350,9 @@
       position: sticky;
       z-index: 60;
       top: 0;
-      min-height: 62px;
-      padding: 6px 10px;
-      gap: 8px 12px;
+      min-height: 52px;
+      padding: 4px 8px;
+      gap: 6px 8px;
       overflow: visible;
       grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: center;
@@ -1232,6 +1366,7 @@
     .brand-block {
       display: flex;
       align-items: stretch;
+      min-height: 40px;
     }
 
     .timeline-block {
@@ -1257,7 +1392,7 @@
       padding: 6px 8px 5px 7px;
       border-radius: 16px;
       border: 1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent 55%), var(--bg-panel);
+      background: var(--bg-panel);
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) min-content;
       gap: 3px;
@@ -1265,10 +1400,11 @@
       overflow: visible;
       white-space: nowrap;
       cursor: pointer;
+      transition: transform 0.16s ease;
     }
 
-    body.theme-dark .timeline-ribbon-shell {
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent 55%), var(--bg-panel);
+    .timeline-ribbon-shell:hover {
+      transform: translateY(-1px);
     }
 
     .record-toggle-btn {
@@ -1308,7 +1444,7 @@
     }
 
     .record-toggle-btn.is-playback {
-      background: rgba(29, 122, 242, 0.1);
+      background: rgba(86, 114, 205, 0.1);
       color: var(--accent-strong);
     }
 
@@ -1397,7 +1533,7 @@
       height: 6px;
       border-radius: 999px;
       overflow: hidden;
-      background: rgba(14, 159, 110, 0.14);
+      background: rgba(86, 114, 205, 0.14);
       position: relative;
     }
 
@@ -1405,7 +1541,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(14, 159, 110, 0.82), transparent);
+      background: linear-gradient(90deg, transparent, rgba(86, 114, 205, 0.82), transparent);
       animation: liveSweep 1.1s linear infinite;
     }
 
@@ -1441,10 +1577,10 @@
       min-width: 28px;
       height: 28px;
       border-radius: 10px;
-      border: 1px solid rgba(96, 165, 250, 0.30);
+      border: 1px solid rgba(86, 114, 205, 0.30);
       background:
         linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.50));
-      color: #1d7af2;
+      color: var(--signal);
       display: inline-grid;
       place-items: center;
       padding: 0;
@@ -1457,7 +1593,7 @@
     .timeline-freeze-btn:hover,
     .timeline-freeze-btn:focus-visible {
       transform: translateY(-1px);
-      border-color: rgba(37, 99, 235, 0.40);
+      border-color: rgba(86, 114, 205, 0.40);
       background:
         linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.60));
       outline: none;
@@ -1480,7 +1616,7 @@
     }
 
     .timeline-ribbon-shell.is-live-frozen .timeline-live-bar {
-      background: linear-gradient(90deg, rgba(29, 122, 242, 0.18), rgba(29, 122, 242, 0.88), rgba(29, 122, 242, 0.18));
+      background: var(--signal);
       animation: reconnectRibbonPulse 1.2s ease-in-out infinite;
     }
 
@@ -1489,39 +1625,32 @@
     }
 
     .timeline-ribbon-shell.is-live-frozen .timeline-freeze-btn {
-      color: #0f4d76;
-      border-color: rgba(37, 99, 235, 0.44);
-      background:
-        linear-gradient(180deg, rgba(239, 246, 255, 0.94), rgba(219, 234, 254, 0.78));
+      color: #3730a3;
+      border-color: var(--accent);
+      background: var(--accent-soft);
     }
 
     body.theme-dark .timeline-freeze-btn {
-      border-color: rgba(125, 211, 252, 0.34);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.14), transparent 58%),
-        rgba(125, 211, 252, 0.12);
-      color: #66d9ff;
-      box-shadow: 0 10px 18px rgba(56, 189, 248, 0.16);
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      box-shadow: 0 10px 18px rgba(99, 102, 241, 0.16);
     }
 
     body.theme-dark .timeline-freeze-btn:hover,
     body.theme-dark .timeline-freeze-btn:focus-visible {
-      border-color: rgba(125, 211, 252, 0.48);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.18), transparent 58%),
-        rgba(125, 211, 252, 0.18);
+      border-color: var(--accent);
+      background: var(--accent-soft);
     }
 
     body.theme-dark .timeline-ribbon-shell.is-live-frozen .timeline-freeze-btn {
-      color: #d8f4ff;
-      border-color: rgba(125, 211, 252, 0.54);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.18), transparent 58%),
-        rgba(125, 211, 252, 0.28);
+      color: #eef2ff;
+      border-color: var(--accent);
+      background: var(--accent);
     }
 
     body.theme-dark .timeline-ribbon-shell.is-live-frozen .timeline-live-bar {
-      background: linear-gradient(90deg, rgba(125, 211, 252, 0.16), rgba(125, 211, 252, 0.72), rgba(125, 211, 252, 0.16));
+      background: var(--signal);
     }
 
     .timeline-ribbon-shell.is-recording .timeline-live-bar {
@@ -1637,17 +1766,17 @@
       border-radius: 12px;
       padding: 8px 11px 9px;
       border: 1px solid transparent;
-      background: rgba(29, 122, 242, 0.05);
+      background: rgba(86, 114, 205, 0.05);
     }
 
     .timeline-pick-item:hover {
-      border-color: rgba(29, 122, 242, 0.14);
-      background: rgba(29, 122, 242, 0.08);
+      border-color: rgba(86, 114, 205, 0.14);
+      background: rgba(86, 114, 205, 0.08);
     }
 
     .timeline-pick-item.active {
-      border-color: rgba(14, 159, 110, 0.24);
-      background: rgba(14, 159, 110, 0.12);
+      border-color: rgba(86, 114, 205, 0.24);
+      background: rgba(86, 114, 205, 0.12);
     }
 
     .timeline-pick-name {
@@ -1714,15 +1843,15 @@
 
     .timeline-export-btn:hover,
     .timeline-export-btn.active {
-      border-color: rgba(29, 122, 242, 0.18);
-      background: rgba(29, 122, 242, 0.08);
+      border-color: rgba(86, 114, 205, 0.18);
+      background: rgba(86, 114, 205, 0.08);
       box-shadow: var(--shadow-soft);
     }
 
     .timeline-export-btn.analysis:hover,
     .timeline-export-btn.analysis.active {
-      border-color: rgba(29, 122, 242, 0.18);
-      background: rgba(29, 122, 242, 0.08);
+      border-color: rgba(86, 114, 205, 0.18);
+      background: rgba(86, 114, 205, 0.08);
       box-shadow: var(--shadow-soft);
     }
 
@@ -1787,7 +1916,7 @@
     body.theme-dark .timeline-export-btn.active,
     body.theme-dark .timeline-export-btn.analysis:hover,
     body.theme-dark .timeline-export-btn.analysis.active {
-      background: rgba(29, 122, 242, 0.16);
+      background: rgba(99, 102, 241, 0.16);
       border-color: rgba(86, 160, 255, 0.28);
       box-shadow: none;
     }
@@ -1809,12 +1938,6 @@
       grid-template-rows: auto auto;
       gap: 2px;
       text-align: left;
-    }
-
-    .theme-toggle-btn {
-      font-size: 16px;
-      line-height: 1;
-      padding: 0;
     }
 
     .record-toggle-btn.is-recording::before {
@@ -1840,7 +1963,7 @@
       height: 100%;
       display: grid;
       grid-template-columns: 286px minmax(320px, 1fr);
-      gap: 18px;
+      gap: 8px;
       align-items: stretch;
       transition: grid-template-columns 0.24s ease, gap 0.24s ease;
     }
@@ -1854,7 +1977,7 @@
       min-width: 0;
       min-height: 0;
       height: 100%;
-      gap: 18px;
+      gap: 8px;
     }
 
     .left-column {
@@ -1863,7 +1986,7 @@
       align-content: stretch;
       min-height: 0;
       overflow: hidden;
-      gap: 18px;
+      gap: 8px;
       transition: opacity 0.24s ease, transform 0.24s ease;
     }
 
@@ -1876,7 +1999,7 @@
 
     .expanded-left-top {
       display: grid;
-      gap: 18px;
+      gap: 8px;
       min-width: 0;
       min-height: 0;
     }
@@ -1892,7 +2015,7 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0;
-      padding: 4px;
+      padding: 0;
       border-radius: 18px;
       border: 1px solid var(--border-strong);
       background: var(--bg-panel-strong);
@@ -1902,14 +2025,14 @@
     .mode-switch-group::before {
       content: "";
       position: absolute;
-      top: 4px;
-      bottom: 4px;
-      left: 4px;
-      width: calc(50% - 4px);
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: calc(50%);
       border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      background: var(--accent);
       border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 10px 20px rgba(14, 159, 110, 0.2);
+      box-shadow: 0 10px 20px rgba(86, 114, 205, 0.2);
       transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
       pointer-events: none;
     }
@@ -1959,7 +2082,7 @@
     .charts-panel,
     .stats-panel,
     .monitor-panel {
-      padding: 18px;
+      padding: 10px;
       overflow: hidden;
     }
 
@@ -1967,8 +2090,8 @@
       display: grid;
       align-content: start;
       align-self: start;
-      gap: 12px;
-      padding: 14px;
+      gap: 8px;
+      padding: 8px;
       height: auto;
       max-height: 100%;
       min-height: 0;
@@ -2075,7 +2198,7 @@
       border-bottom-right-radius: 0;
       padding: 9px 10px;
       font-size: 12px;
-      box-shadow: 0 12px 24px rgba(14, 159, 110, 0.2);
+      box-shadow: 0 12px 24px rgba(86, 114, 205, 0.2);
     }
 
     #connect-btn {
@@ -2276,8 +2399,8 @@
 
     .baud-rate-combo:focus-within,
     .baud-rate-anchor.open .baud-rate-combo {
-      border-color: rgba(29, 122, 242, 0.52);
-      box-shadow: 0 0 0 4px rgba(29, 122, 242, 0.12);
+      border-color: rgba(86, 114, 205, 0.52);
+      box-shadow: 0 0 0 4px rgba(86, 114, 205, 0.12);
     }
 
     .baud-rate-combo > input,
@@ -2407,8 +2530,8 @@
 
     .signal-readout.is-on {
       border-style: solid;
-      border-color: rgba(14, 159, 110, 0.38);
-      background: rgba(14, 159, 110, 0.12);
+      border-color: rgba(86, 114, 205, 0.38);
+      background: rgba(86, 114, 205, 0.12);
     }
 
     .field label,
@@ -2486,7 +2609,7 @@
       border-radius: 18px;
       border: 1px solid var(--border);
       padding: 12px 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent), var(--bg-panel-strong);
+      background: var(--bg-panel-strong);
     }
 
     .device-card strong,
@@ -2532,7 +2655,7 @@
       min-height: 46px;
       border-radius: 18px;
       border: 1px dashed var(--border-strong);
-      background: rgba(29, 122, 242, 0.08);
+      background: rgba(86, 114, 205, 0.08);
       color: var(--signal);
       display: flex;
       align-items: center;
@@ -2571,7 +2694,7 @@
     body.layout-expanded .parser-panel,
     body.layout-expanded .charts-panel {
       display: grid;
-      gap: 16px;
+      gap: 8px;
     }
 
     body.layout-expanded:not(.compact-single) .parser-panel,
@@ -2598,7 +2721,7 @@
       min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      gap: 18px;
+      gap: 8px;
       padding-right: 2px;
     }
 
@@ -2613,22 +2736,23 @@
     }
 
     .mode-tabs.mode-switch-group {
-      min-width: 208px;
-      max-width: 252px;
+      min-width: 160px;
+      max-width: 200px;
     }
 
     .mode-tabs.mode-switch-group::before {
-      top: 5px;
-      bottom: 5px;
-      left: 5px;
+      top: 0;
+      bottom: 0;
+      left: 0;
       right: auto;
-      width: calc(50% - 10px);
-      border-radius: 14px;
+      width: calc(50%);
+      border-radius: 12px;
+      background: var(--accent);
       transition: left 0.2s ease, border-color 0.2s ease, background 0.2s ease;
     }
 
     .mode-tabs.mode-switch-group.parser-active::before {
-      left: calc(50% + 5px);
+      left: calc(50%);
       transform: none;
     }
 
@@ -2636,9 +2760,9 @@
       position: relative;
       z-index: 1;
       min-width: 0;
-      min-height: 36px;
-      padding: 8px 12px;
-      border-radius: 12px;
+      min-height: 30px;
+      padding: 4px 8px;
+      border-radius: 10px;
       border: 1px solid transparent;
       background: transparent;
       color: var(--text-soft);
@@ -2651,14 +2775,14 @@
     }
 
     .mode-tabs .mode-tab.active {
-      color: #f4fff9;
+      color: #eef2ff;
     }
 
     .parser-config-card,
     .parser-results-card {
       border: 1px solid var(--border);
       border-radius: 18px;
-      background: var(--panel-glow), var(--bg-panel);
+      background: var(--bg-panel);
       padding: 12px;
       display: grid;
       gap: 10px;
@@ -2713,14 +2837,15 @@
     }
 
     .auto-detect-btn {
-      min-height: 34px;
-      padding: 0 12px;
+      min-height: 30px;
+      padding: 4px 12px;
       border-radius: 14px;
       border: 1px solid var(--border-strong);
       background: rgba(255,255,255,0.18);
       color: var(--text-soft);
       font-size: 12px;
       font-weight: 800;
+      line-height: 1;
       transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
       white-space: nowrap;
     }
@@ -2730,10 +2855,10 @@
     }
 
     .auto-detect-btn.is-ready {
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      border-color: rgba(14, 159, 110, 0.42);
-      color: #f4fff9;
-      box-shadow: 0 12px 24px rgba(14, 159, 110, 0.18);
+      background: var(--accent);
+      border-color: transparent;
+      color: #eef2ff;
+      box-shadow: 0 12px 24px rgba(86, 114, 205, 0.18);
     }
 
     .text-rule-editor {
@@ -2746,8 +2871,8 @@
     }
 
     .text-rule-editor:focus-within {
-      border-color: rgba(29, 122, 242, 0.52);
-      box-shadow: 0 0 0 4px rgba(29, 122, 242, 0.12);
+      border-color: rgba(86, 114, 205, 0.52);
+      box-shadow: 0 0 0 4px rgba(86, 114, 205, 0.12);
     }
 
     .text-rule-overlay,
@@ -2827,8 +2952,8 @@
       border-radius: 6px;
       box-decoration-break: clone;
       -webkit-box-decoration-break: clone;
-      box-shadow: inset 0 0 0 1px rgba(29, 122, 242, 0.18);
-      background: rgba(29, 122, 242, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(86, 114, 205, 0.18);
+      background: rgba(86, 114, 205, 0.1);
       color: var(--signal);
       font-weight: inherit;
       line-height: inherit;
@@ -2841,8 +2966,8 @@
     }
 
     .text-rule-tag.kind-float {
-      background: rgba(14, 159, 110, 0.12);
-      box-shadow: inset 0 0 0 1px rgba(14, 159, 110, 0.24);
+      background: rgba(86, 114, 205, 0.12);
+      box-shadow: inset 0 0 0 1px rgba(86, 114, 205, 0.24);
       color: var(--accent-strong);
     }
 
@@ -2869,7 +2994,7 @@
     }
 
     .binary-schema-head {
-      padding: 0 2px;
+      padding: 0 2px 0 28px;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.04em;
@@ -2877,13 +3002,19 @@
       text-transform: uppercase;
     }
 
+    .queue-send-head-shell,
     .preset-send-head-shell,
     .condition-send-head-shell {
-      padding: 0 6px 2px;
+      padding: 0 6px 2px 28px;
       border: 1px solid transparent;
       background: transparent;
     }
 
+    .queue-send-head {
+      grid-template-columns: 24px minmax(0, 1fr) 32px;
+    }
+
+    .queue-send-head,
     .preset-send-head,
     .condition-send-head {
       display: grid;
@@ -2899,7 +3030,11 @@
     }
 
     .preset-send-head {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr) var(--preset-action-w) var(--preset-action-w);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(24px, 28px) var(--preset-action-w) var(--preset-action-w);
+    }
+    .preset-send-head span:nth-child(4) {
+      grid-column: span 2;
+      text-align: left;
     }
 
     .condition-send-head {
@@ -2908,14 +3043,14 @@
 
     .binary-schema-list {
       display: grid;
-      gap: 8px;
+      gap: 4px;
     }
 
     .binary-schema-row {
       position: relative;
-      padding: 5px;
+      padding: 3px;
       padding-left: 28px;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.08);
     }
@@ -2934,8 +3069,8 @@
       width: 100%;
       min-width: 0;
       box-sizing: border-box;
-      padding: 6px 8px;
-      border-radius: 12px;
+      padding: 3px 5px;
+      border-radius: 10px;
       border: 1px solid var(--border-strong);
       background: var(--bg-panel-strong);
       color: var(--text);
@@ -2945,23 +3080,23 @@
     }
 
     .binary-schema-row .custom-select-trigger {
-      min-height: 30px;
-      height: 30px;
-      padding: 0 7px 0 8px;
-      border-radius: 12px;
+      min-height: 26px;
+      height: 26px;
+      padding: 0 6px 0 6px;
+      border-radius: 10px;
       font-size: 11px;
-      gap: 6px;
+      gap: 4px;
     }
 
     .binary-schema-row .custom-select-label {
-      padding: 6px 0;
+      padding: 4px 0;
     }
 
     .binary-schema-row .mini-btn {
       min-width: 18px;
       width: 18px;
-      min-height: 30px;
-      height: 30px;
+      min-height: 26px;
+      height: 26px;
       padding: 0;
       border: 0;
       background: transparent;
@@ -2991,14 +3126,6 @@
       -moz-appearance: none;
     }
 
-    .binary-schema-cell {
-      min-width: 0;
-    }
-
-    .binary-schema-cell.hidden {
-      display: none;
-    }
-
     .parser-result-grid {
       display: flex;
       flex-wrap: nowrap;
@@ -3017,10 +3144,10 @@
       border-radius: 14px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.08);
-      padding: 10px 12px;
+      padding: 8px 10px;
       display: grid;
-      grid-template-rows: 16px 20px;
-      gap: 8px;
+      grid-template-rows: 14px 18px;
+      gap: 5px;
       align-content: start;
       overflow: hidden;
     }
@@ -3036,7 +3163,7 @@
     body.parser-results-expanded .parser-result-card {
       min-width: 0;
       flex: initial;
-      min-height: 60px;
+      min-height: 40px;
       grid-template-rows: auto auto;
       overflow: visible;
     }
@@ -3046,13 +3173,13 @@
     }
 
     .parser-result-card.status-ok {
-      border-color: rgba(14, 159, 110, 0.42);
-      background: linear-gradient(180deg, rgba(14, 159, 110, 0.12), transparent 68%), rgba(255,255,255,0.08);
+      border-color: rgba(86, 114, 205, 0.42);
+      background: rgba(86, 114, 205, 0.08);
     }
 
     .parser-result-card.status-error {
       border-color: rgba(194, 65, 12, 0.5);
-      background: linear-gradient(180deg, rgba(194, 65, 12, 0.12), transparent 68%), rgba(255,255,255,0.08);
+      background: rgba(194, 65, 12, 0.08);
     }
 
     .parser-result-card strong {
@@ -3126,8 +3253,67 @@
       min-width: 0;
     }
 
+    .parser-card-head .secondary-btn,
     .chart-add-strip .secondary-btn {
-      min-height: 34px;
+      min-height: 30px;
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+
+    .help-icon {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid var(--text-soft);
+      color: var(--text-soft);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: help;
+      flex: 0 0 auto;
+      text-transform: none;
+      transition: border-color 0.16s ease, color 0.16s ease, background 0.16s ease;
+    }
+    .help-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .help-icon:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: -16px;
+      top: calc(100% + 8px);
+      width: 280px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-panel-strong);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.55;
+      white-space: pre-line;
+      text-align: left;
+      text-transform: none;
+      z-index: 30;
+      pointer-events: none;
+    }
+    .help-icon:hover::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 2px);
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-bottom-color: var(--border);
+      z-index: 31;
+      pointer-events: none;
     }
 
     .danger-btn {
@@ -3193,8 +3379,8 @@
       align-items: center;
       border-radius: 999px;
       padding: 6px 10px;
-      background: rgba(29, 122, 242, 0.1);
-      border: 1px solid rgba(29, 122, 242, 0.14);
+      background: rgba(86, 114, 205, 0.1);
+      border: 1px solid rgba(86, 114, 205, 0.14);
       font-size: 11px;
       font-weight: 700;
       color: var(--signal);
@@ -3231,7 +3417,7 @@
     .charts-panel {
       display: grid;
       grid-template-rows: auto 1fr;
-      gap: 14px;
+      gap: 8px;
       background: transparent;
       border: none;
       box-shadow: none;
@@ -3241,7 +3427,7 @@
       min-height: 0;
       overflow: auto;
       display: grid;
-      gap: 14px;
+      gap: 8px;
       padding-right: 4px;
       position: relative;
       z-index: 0;
@@ -3257,7 +3443,7 @@
       position: relative;
       border-radius: 20px;
       border: 1px solid var(--border);
-      background: var(--panel-glow), var(--bg-panel);
+      background: var(--bg-panel);
       padding: 14px;
       display: grid;
       gap: 12px;
@@ -3267,7 +3453,7 @@
     .chart-add-strip {
       border: 1px solid var(--border);
       border-radius: 18px;
-      background: var(--panel-glow), var(--bg-panel);
+      background: var(--bg-panel);
       padding: 12px 14px;
       box-shadow: var(--shadow-soft);
     }
@@ -3348,8 +3534,8 @@
     .chart-tool-btn:hover,
     .chart-tool-btn:focus-visible {
       transform: translateY(-1px);
-      border-color: rgba(58, 204, 154, 0.44);
-      background: linear-gradient(180deg, rgba(58, 204, 154, 0.16), rgba(58, 204, 154, 0.06)), var(--bg-panel);
+      border-color: var(--accent);
+      background: var(--accent-soft);
       outline: none;
     }
 
@@ -3363,10 +3549,10 @@
     }
 
     .chart-tool-btn.chart-auto-btn.is-active {
-      border-color: rgba(58, 204, 154, 0.52);
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #f4fff9;
-      box-shadow: 0 12px 24px rgba(14, 159, 110, 0.22);
+      border-color: transparent;
+      background: var(--accent);
+      color: #eef2ff;
+      box-shadow: 0 12px 24px rgba(86, 114, 205, 0.22);
     }
 
     .chart-order-tools .chart-tool-btn {
@@ -3435,6 +3621,7 @@
     .chart-channel-list label {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 8px;
       width: 100%;
       min-height: 42px;
@@ -3445,6 +3632,13 @@
       color: var(--text);
       font-size: 12px;
       box-sizing: border-box;
+    }
+    .chart-channel-list label span {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .chart-config-section {
@@ -3483,8 +3677,8 @@
     .chart-config-field input:focus,
     .chart-config-field select:focus,
     .chart-config-field textarea:focus {
-      border-color: rgba(58, 204, 154, 0.48);
-      box-shadow: 0 0 0 3px rgba(58, 204, 154, 0.14);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
     .chart-canvas-wrap {
@@ -3581,22 +3775,16 @@
     .chart-view-chip.is-selectable:hover,
     .chart-view-chip.is-selectable:focus-visible {
       transform: translateY(-1px);
-      border-color: rgba(58, 204, 154, 0.44);
-      background: linear-gradient(180deg, rgba(58, 204, 154, 0.16), rgba(58, 204, 154, 0.06)), var(--bg-panel);
+      border-color: var(--accent);
+      background: var(--accent-soft);
       outline: none;
     }
 
     .chart-axis-overlay {
       pointer-events: none;
       border-radius: 12px;
-      border: 1px solid rgba(58, 204, 154, 0.34);
-      background:
-        repeating-linear-gradient(
-          90deg,
-          rgba(58, 204, 154, 0.18) 0 6px,
-          rgba(58, 204, 154, 0.04) 6px 12px
-        ),
-        rgba(255,255,255,0.72);
+      border: 1px solid var(--accent);
+      background: var(--accent-soft);
       color: var(--accent-strong);
       display: flex;
       align-items: center;
@@ -3605,16 +3793,6 @@
       font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.04em;
-    }
-
-    body.theme-dark .chart-axis-overlay {
-      background:
-        repeating-linear-gradient(
-          90deg,
-          rgba(58, 204, 154, 0.22) 0 6px,
-          rgba(58, 204, 154, 0.06) 6px 12px
-        ),
-        rgba(10, 16, 22, 0.62);
     }
 
     .chart-axis-overlay-x {
@@ -3630,24 +3808,8 @@
       bottom: 36px;
       left: 6px;
       width: 36px;
-      background:
-        repeating-linear-gradient(
-          180deg,
-          rgba(58, 204, 154, 0.18) 0 6px,
-          rgba(58, 204, 154, 0.04) 6px 12px
-        ),
-        rgba(255,255,255,0.72);
+      background: var(--accent-soft);
       transform: translateX(-4px);
-    }
-
-    body.theme-dark .chart-axis-overlay-y {
-      background:
-        repeating-linear-gradient(
-          180deg,
-          rgba(58, 204, 154, 0.22) 0 6px,
-          rgba(58, 204, 154, 0.06) 6px 12px
-        ),
-        rgba(10, 16, 22, 0.62);
     }
 
     .chart-axis-binding-picker {
@@ -3699,14 +3861,14 @@
     }
 
     .chart-axis-binding-option:hover {
-      border-color: rgba(58, 204, 154, 0.34);
-      background: rgba(58, 204, 154, 0.14);
+      border-color: var(--accent);
+      background: var(--accent-soft);
     }
 
     .chart-axis-binding-option.is-active {
-      border-color: rgba(58, 204, 154, 0.4);
-      background: linear-gradient(135deg, var(--picker-color, var(--accent)), var(--picker-color-strong, var(--accent-strong)));
-      color: #f7fffb;
+      border-color: transparent;
+      background: var(--accent);
+      color: #eef2ff;
     }
 
     body.theme-dark .chart-axis-binding-option {
@@ -3843,10 +4005,7 @@
       border-radius: 18px;
       padding: 14px;
       border: 1px solid var(--border);
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 65%),
-        repeating-linear-gradient(180deg, rgba(29, 122, 242, 0.04), rgba(29, 122, 242, 0.04) 1px, transparent 1px, transparent 28px),
-        var(--bg-terminal);
+      background: var(--bg-terminal);
       box-shadow: inset 0 6px 18px rgba(0, 0, 0, 0.06);
       font-family: var(--font-mono);
       font-size: 12px;
@@ -3861,10 +4020,10 @@
       height: 38px;
       min-width: 38px;
       border-radius: 999px;
-      border: 1px solid rgba(29, 122, 242, 0.26);
-      background: linear-gradient(135deg, rgba(29, 122, 242, 0.92), rgba(14, 159, 110, 0.88));
-      color: #f4fbff;
-      box-shadow: 0 12px 24px rgba(13, 68, 132, 0.22);
+      border: 1px solid transparent;
+      background: var(--accent);
+      color: #eef2ff;
+      box-shadow: 0 12px 24px rgba(52, 81, 178, 0.22);
       display: grid;
       place-items: center;
       opacity: 0;
@@ -3952,12 +4111,12 @@
 
     .preset-inline-tag.preset-tag-blue {
       color: var(--signal);
-      background: rgba(29, 122, 242, 0.10);
+      background: rgba(86, 114, 205, 0.10);
     }
 
     .preset-inline-tag.preset-tag-green {
       color: var(--accent-strong);
-      background: rgba(14, 159, 110, 0.12);
+      background: rgba(86, 114, 205, 0.12);
     }
 
     .preset-inline-tag.preset-tag-red {
@@ -3971,15 +4130,15 @@
       flex: 0 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 8px 0 0;
+      gap: 4px;
+      padding: 4px 0 0;
       border-top: 1px solid var(--border);
       align-self: stretch;
       min-height: 0;
       overflow: visible;
-      --send-manual-h: 72px;
-      --send-modebar-h: 40px;
-      --send-extension-h: 252px;
+      --send-manual-h: 56px;
+      --send-modebar-h: 34px;
+      --send-extension-h: 220px;
     }
 
     .send-resize-handle {
@@ -4006,7 +4165,7 @@
 
     .send-manual-panel {
       display: grid;
-      gap: 8px;
+      gap: 5px;
       min-height: 0;
       flex: 0 0 auto;
     }
@@ -4014,7 +4173,7 @@
     .send-main {
       display: grid;
       grid-template-columns: 1fr 132px;
-      gap: 8px;
+      gap: 5px;
       align-items: stretch;
       min-height: var(--send-manual-h);
     }
@@ -4050,7 +4209,7 @@
     .send-modebar {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      gap: 5px;
       align-items: stretch;
       overflow: hidden;
       min-height: var(--send-modebar-h);
@@ -4060,11 +4219,11 @@
     .send-mode-tile {
       display: grid;
       grid-template-columns: auto 1fr;
-      gap: 8px;
+      gap: 5px;
       align-items: center;
-      min-height: 40px;
-      padding: 5px 9px;
-      border-radius: 18px;
+      min-height: 34px;
+      padding: 4px 7px;
+      border-radius: 14px;
       border: 1px solid var(--border-strong);
       background: rgba(255, 255, 255, 0.4);
       transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
@@ -4077,13 +4236,13 @@
     }
 
     .send-mode-tile.is-open {
-      border-color: rgba(29, 122, 242, 0.34);
-      box-shadow: inset 0 0 0 1px rgba(29, 122, 242, 0.12);
+      border-color: rgba(86, 114, 205, 0.34);
+      box-shadow: inset 0 0 0 1px rgba(86, 114, 205, 0.12);
     }
 
     .send-mode-tile.is-enabled {
-      background: linear-gradient(135deg, rgba(29, 122, 242, 0.18), rgba(14, 159, 110, 0.16));
-      border-color: rgba(29, 122, 242, 0.34);
+      background: var(--accent-soft);
+      border-color: var(--signal);
       color: var(--text-main);
     }
 
@@ -4103,15 +4262,10 @@
 
     .send-mode-tile.is-steady-success,
     .module-card.is-steady-success {
-      border-color: rgba(14, 159, 110, 0.42);
-      box-shadow: inset 0 0 0 1px rgba(14, 159, 110, 0.2), 0 8px 18px rgba(14, 159, 110, 0.08);
-      background: linear-gradient(135deg, rgba(14, 159, 110, 0.24), rgba(29, 122, 242, 0.12));
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent-soft), 0 8px 18px rgba(86, 114, 205, 0.08);
+      background: var(--accent-soft);
       color: var(--text-main);
-    }
-
-    body.theme-dark .send-mode-tile.is-steady-success,
-    body.theme-dark .module-card.is-steady-success {
-      background: linear-gradient(135deg, rgba(68, 210, 159, 0.24), rgba(29, 122, 242, 0.18));
     }
 
     .mode-enable-dot {
@@ -4137,18 +4291,18 @@
     }
 
     .send-mode-tile.is-enabled .mode-enable-dot {
-      border-color: rgba(14, 159, 110, 0.5);
-      background: rgba(14, 159, 110, 0.12);
+      border-color: rgba(86, 114, 205, 0.5);
+      background: rgba(86, 114, 205, 0.12);
     }
 
     .send-mode-tile.is-enabled .mode-enable-dot::after {
       background: var(--accent-strong);
-      box-shadow: 0 0 0 3px rgba(14, 159, 110, 0.16);
+      box-shadow: 0 0 0 3px rgba(86, 114, 205, 0.16);
       transform: scale(1.02);
     }
 
     .send-mode-switch {
-      min-height: 28px;
+      min-height: 24px;
       width: 100%;
       padding: 0;
       border: none;
@@ -4157,7 +4311,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 5px;
       text-align: left;
       font-size: 12px;
       font-weight: 700;
@@ -4223,7 +4377,7 @@
     .send-mode-stack {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 5px;
       min-height: 100%;
       height: 100%;
       flex: 1 1 auto;
@@ -4283,13 +4437,13 @@
     }
 
     .module-card {
-      border-radius: 14px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: rgba(255,255,255,0.08);
-      padding: 7px;
+      padding: 5px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 3px;
       min-height: 0;
       overflow: hidden;
       height: 100%;
@@ -4301,13 +4455,9 @@
     }
 
     .module-card.is-enabled {
-      border-color: rgba(14, 159, 110, 0.32);
-      box-shadow: inset 0 0 0 1px rgba(14, 159, 110, 0.14);
-      background: linear-gradient(180deg, rgba(14, 159, 110, 0.08), transparent 54%), rgba(255,255,255,0.08);
-    }
-
-    body.theme-dark .module-card.is-enabled {
-      background: linear-gradient(180deg, rgba(68, 210, 159, 0.12), transparent 56%), rgba(7, 11, 15, 0.42);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent-soft);
+      background: var(--accent-soft);
     }
 
     .module-card .panel-title {
@@ -4321,7 +4471,7 @@
     .module-body {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
       min-height: 0;
       flex: 1 1 auto;
       overflow: auto;
@@ -4332,12 +4482,49 @@
     .module-head {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 6px;
+      gap: 4px;
       align-items: center;
     }
 
     .module-head.module-head-passive {
       grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .module-head-inline {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .module-head-inline .field-inline {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .module-head-inline .field-inline label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .module-head-inline .field-inline {
+      flex-shrink: 0;
+    }
+
+    .module-head-inline .field-inline .compact-input {
+      width: 68px;
+    }
+
+    .module-head-inline .module-head-action {
+      min-height: 28px;
+      padding: 5px 9px;
     }
 
     .module-copy {
@@ -4381,8 +4568,8 @@
     }
 
     .module-switch.is-on {
-      border-color: rgba(14, 159, 110, 0.32);
-      background: rgba(14, 159, 110, 0.18);
+      border-color: rgba(86, 114, 205, 0.32);
+      background: rgba(86, 114, 205, 0.18);
     }
 
     .module-switch.is-on::after {
@@ -4400,9 +4587,9 @@
 
     .queue-table,
     .rule-table {
-      --preset-action-w: 42px;
+      --preset-action-w: 36px;
       display: grid;
-      gap: 4px;
+      gap: 3px;
       overflow-x: hidden;
       overflow-y: visible;
       padding-right: 0;
@@ -4414,10 +4601,10 @@
     .queue-item,
     .rule-item {
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 6px;
+      border-radius: 10px;
+      padding: 4px;
       display: grid;
-      gap: 4px;
+      gap: 3px;
       background: var(--bg-panel-strong);
     }
 
@@ -4425,7 +4612,7 @@
     .rule-item-grid {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 8px;
+      gap: 5px;
       align-items: center;
     }
 
@@ -4437,16 +4624,60 @@
     .queue-inline-row .compact-input,
     .rule-inline-row .compact-input,
     .preset-inline-row .compact-input {
-      min-height: 32px;
-      border-radius: 14px;
-      font-size: 13px;
+      min-height: 26px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    .preset-inline-row [data-preset-shortcut] {
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 0;
     }
 
-    .compact-input,
+    .compact-input {
+      min-height: 26px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      font-size: 12px;
+      padding: 4px 6px;
+      background-color: var(--bg-panel-strong);
+    }
+
     .compact-select,
     .custom-select.compact {
-      min-height: 32px;
+      min-height: 26px;
       width: 100%;
+      font-size: 12px;
+    }
+
+    .custom-select.compact {
+      border: none;
+      background: none;
+      border-radius: 0;
+      padding: 0;
+    }
+
+    .custom-select.compact .custom-select-trigger {
+      min-height: 26px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background-color: var(--bg-panel-strong);
+      padding: 0 6px;
+      gap: 4px;
+      font-size: 12px;
+    }
+
+    .compact-select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-color: var(--bg-panel-strong);
+      padding: 4px 6px;
+      cursor: pointer;
     }
 
     .queue-inline-row input[type="checkbox"],
@@ -4468,14 +4699,14 @@
     .preset-inline-row {
       position: relative;
       display: grid;
-      gap: 6px;
+      gap: 4px;
       align-items: center;
-      padding-left: 24px;
+      padding-left: 28px;
     }
 
     .reorder-drag-handle {
       position: absolute;
-      left: 3px;
+      left: 5px;
       top: 50%;
       transform: translateY(-50%);
       width: 18px;
@@ -4500,7 +4731,7 @@
     .reorder-drag-handle:hover,
     .reorder-drag-handle:focus-visible {
       color: var(--accent);
-      background: rgba(29, 122, 242, 0.1);
+      background: rgba(86, 114, 205, 0.1);
       outline: none;
     }
 
@@ -4515,8 +4746,8 @@
 
     .is-reorder-dragging {
       opacity: 0.58;
-      outline: 1px solid rgba(29, 122, 242, 0.38);
-      box-shadow: 0 0 0 3px rgba(29, 122, 242, 0.08);
+      outline: 1px solid rgba(86, 114, 205, 0.38);
+      box-shadow: 0 0 0 3px rgba(86, 114, 205, 0.08);
     }
 
     .is-reorder-animating {
@@ -4532,25 +4763,30 @@
     }
 
     .preset-inline-row {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(34px, var(--preset-action-w)) minmax(34px, var(--preset-action-w));
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(24px, 28px) minmax(34px, var(--preset-action-w)) minmax(34px, var(--preset-action-w));
     }
 
+    .queue-inline-row .mini-btn,
     .rule-inline-row .mini-btn,
     .preset-inline-row .mini-btn {
       width: 100%;
-      min-width: 0;
-      padding-inline: 0;
+      min-width: 34px;
+      height: 26px;
+      min-height: 26px;
+      padding: 0;
+      font-size: 11px;
+      border-radius: 8px;
     }
 
     .queue-item .compact-input,
     .rule-item .compact-input,
     .preset-inline-row .compact-input {
-      padding: 8px 10px;
+      padding: 4px 6px;
       background: var(--bg-panel-strong);
     }
 
     .rule-response-row .compact-input {
-      padding: 8px 10px;
+      padding: 4px 6px;
     }
 
     @keyframes modePulseSuccessFlash {
@@ -4559,9 +4795,9 @@
         box-shadow: none;
       }
       30% {
-        border-color: rgba(14, 159, 110, 0.5);
-        box-shadow: inset 0 0 0 1px rgba(14, 159, 110, 0.18);
-        background: linear-gradient(135deg, rgba(14, 159, 110, 0.28), rgba(41, 194, 122, 0.16));
+        border-color: rgba(86, 114, 205, 0.5);
+        box-shadow: inset 0 0 0 1px rgba(86, 114, 205, 0.18);
+        background: linear-gradient(135deg, rgba(86, 114, 205, 0.28), rgba(41, 194, 122, 0.16));
       }
       100% {
         border-color: var(--border-strong);
@@ -4587,10 +4823,10 @@
 
     .toast-layer {
       position: fixed;
-      right: 18px;
-      bottom: 18px;
+      right: 8px;
+      bottom: 8px;
       display: grid;
-      gap: 10px;
+      gap: 8px;
       z-index: 50;
       pointer-events: none;
     }
@@ -4647,9 +4883,9 @@
     }
 
     .toast-action-btn.primary {
-      border-color: rgba(14, 159, 110, 0.38);
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #f4fff9;
+      border-color: transparent;
+      background: var(--accent);
+      color: #eef2ff;
     }
 
     .toast.success .toast-title {
@@ -4781,6 +5017,11 @@
       fill: rgba(255,255,255,0.16);
     }
 
+    body.theme-dark .version-info-grid a,
+    body.theme-dark .version-online-box a {
+      color: var(--accent-strong);
+    }
+
     .version-modal-body {
       display: grid;
       gap: 16px;
@@ -4819,8 +5060,8 @@
       gap: 6px;
       padding: 12px 14px;
       border-radius: 14px;
-      border: 1px solid rgba(29, 122, 242, 0.18);
-      background: rgba(29, 122, 242, 0.08);
+      border: 1px solid rgba(86, 114, 205, 0.18);
+      background: rgba(86, 114, 205, 0.08);
       font-size: 13px;
     }
 
@@ -5034,21 +5275,21 @@
 
     body.compact-single .left-column {
       position: fixed;
-      left: 18px;
+      left: 8px;
       top: var(--compact-float-top);
       bottom: auto;
       height: auto;
-      max-height: calc(100vh - var(--compact-float-top) - 18px);
-      width: min(380px, calc(100vw - 36px));
+      max-height: calc(100vh - var(--compact-float-top) - 8px);
+      width: min(380px, calc(100vw - 16px));
       z-index: 25;
-      transform: translateX(calc(-100% - 18px));
+      transform: translateX(calc(-100% - 8px));
       opacity: 0;
       pointer-events: none;
       box-shadow: var(--shadow);
       transition: transform 0.22s ease, opacity 0.18s ease;
       overflow: hidden;
       overflow-x: hidden;
-      gap: 18px;
+      gap: 8px;
       grid-template-rows: auto;
       padding-right: 0;
       align-content: start;
@@ -5070,7 +5311,7 @@
       position: static;
       width: auto;
       height: auto;
-      max-height: calc(100vh - var(--compact-float-top) - 18px);
+      max-height: calc(100vh - var(--compact-float-top) - 8px);
       min-height: 0;
       align-self: start;
       transform: none;
@@ -5089,7 +5330,7 @@
     body.compact-single .expanded-left-top {
       min-height: 0;
       height: auto;
-      max-height: calc(100vh - var(--compact-float-top) - 18px);
+      max-height: calc(100vh - var(--compact-float-top) - 8px);
       align-content: start;
     }
 
@@ -5101,7 +5342,7 @@
     body.compact-single.layout-expanded .right-column {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 8px;
       height: 100%;
       min-height: 0;
       overflow-y: auto;
@@ -5199,7 +5440,7 @@
           <span id="serial-status-dot" class="status-dot warn"></span>
           <div class="status-pill-copy">
             <span class="status-pill-title">SerialWeb</span>
-            <span id="serial-status-text" class="status-pill-subtitle">串口离线</span>
+            <span id="serial-status-text" class="status-pill-subtitle" data-hover="展开/折叠连接管理">串口离线</span>
           </div>
           <div id="logo-mode-switch" class="logo-mode-switch" aria-label="模式切换">
             <button id="serial-mode-btn" class="logo-mode-btn is-active" type="button" title="串口监视">
@@ -5264,27 +5505,36 @@
 
       <section class="corner-block">
         <div class="corner-actions">
-          <button id="theme-toggle-btn" class="icon-btn theme-toggle-btn" title="切换主题" aria-label="切换主题">☀</button>
           <div class="menu-anchor">
             <button id="system-menu-btn" class="icon-btn" title="System Menu">&#9776;</button>
             <div id="system-menu" class="floating-menu">
               <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
-                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.2</span>
+                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.4</span>
                 <span id="online-mode-chip" class="online-mode-chip">当前在线最新</span>
               </button>
+              <div class="menu-theme-line">
+                <span class="menu-theme-label">主题：</span>
+                <div id="menu-theme-group" class="menu-theme-group">
+                  <button class="menu-theme-opt is-active" data-theme="system">跟随系统</button>
+                  <button class="menu-theme-opt" data-theme="light">浅色模式</button>
+                  <button class="menu-theme-opt" data-theme="dark">深色模式</button>
+                </div>
+              </div>
               <div id="config-menu-row" class="menu-config-line">
                 <span class="menu-config-label">配置：</span>
                 <button id="copy-user-config-btn" type="button">复制配置</button>
                 <button id="paste-user-config-btn" type="button">粘贴导入</button>
-                <button id="reset-user-config-btn" type="button">还原</button>
+                <button id="reset-user-config-btn" type="button">清空配置</button>
               </div>
               <div id="config-menu-confirm-row" class="menu-config-line hidden">
                 <span class="menu-config-warning">此操作会丢失当前设置</span>
                 <button id="confirm-user-config-btn" class="danger-btn" type="button">确认</button>
                 <button id="cancel-user-config-btn" type="button">取消</button>
               </div>
-              <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
-              <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
+              <div class="menu-link-row">
+                <a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">问题反馈</a>
+                <a href="https://docs.conductance-lab.xyz/工具手册/SerialWeb工具手册" target="_blank" rel="noreferrer">工具手册</a>
+              </div>
               <a id="download-local-link" href="index.html" download="SerialWeb串口调试.html">下载离线版到本地</a>
               <a href="https://conductance-lab.xyz" target="_blank" rel="noreferrer">电导实验室主页</a>
             </div>
@@ -5498,7 +5748,9 @@
 
           <section id="text-parser-pane" class="parser-config-card">
             <div class="parser-card-head">
-              <div class="panel-title">文本解析配置</div>
+              <div class="panel-title">文本解析配置
+                <span class="help-icon" data-tip="如何编写解析规则：&#10;&#10;三种标记（必须 / 开头 + 数字序号）：&#10;/nameN → 匹配文本，用作键名&#10;/intN  → 匹配整数&#10;/floatN → 匹配小数&#10;&#10;标记之间可放任意分隔符&#10;分隔符按原样匹配输入数据&#10;&#10;例 1：/name0=/int0 /name1=/float1&#10;可解析：温度=42 湿度=3.14&#10;结果→ 温度:42, 湿度:3.14&#10;&#10;例 2：/name0:/int0,/name1=/float1&#10;可解析：温度:42,湿度=3.14&#10;&#10;例 3（动态键名）：/name0=/int0&#10;同一规则可解析不同输入：&#10; 传感器A=25 → 传感器A:25&#10; 传感器B=30 → 传感器B:30&#10;name 会自动将捕获的文本&#10;作为该条数据的键名">?</span>
+              </div>
               <button id="apply-recommended-rule-btn" class="auto-detect-btn" type="button">自动识别：不可用</button>
             </div>
             <div class="field">
@@ -5515,7 +5767,9 @@
           <section id="binary-parser-pane" class="parser-config-card hidden">
             <div class="parser-card-head">
               <div>
-                <div class="panel-title">十六进制结构表</div>
+                <div class="panel-title">十六进制结构表
+                  <span class="help-icon" data-tip="行类型（按表格下拉顺序）：&#10;• 帧头 — 帧起始标识，16进制&#10;  留空则跳过&#10;• 帧尾 — 帧结束标识，16进制&#10;  留空则不检查帧尾&#10;• 数据 — 数值数据，需选择&#10;  数据类型 + 填写标签名&#10;• 校验和 — 自动计算 SUM8&#10;  仅覆盖 data 行的字节&#10;• 间隔符 — 留空占位 1 字节&#10;  填入则匹配指定16进制&#10;&#10;数值大小端说明：&#10;LE = Little Endian（低位在前）&#10;BE = Big Endian（高位在前）&#10;&#10;可用数据类型：&#10;UInt8 / Int8&#10;UInt16 LE/BE / Int16 LE/BE&#10;UInt32 LE/BE / Int32 LE/BE&#10;Float32 LE/BE / Bool(8bit)">?</span>
+                </div>
               </div>
               <button id="add-binary-row-btn" class="secondary-btn">新增一行</button>
             </div>
@@ -5548,6 +5802,7 @@
             <div class="button-row">
               <button id="add-time-chart-btn" class="secondary-btn">时域图</button>
               <button id="add-fft-chart-btn" class="secondary-btn">频域图</button>
+              <button id="add-bar-chart-btn" class="secondary-btn">柱状图</button>
               <button id="clear-charts-btn" class="secondary-btn danger-btn" type="button">清空缓存</button>
             </div>
           </div>
@@ -5601,15 +5856,15 @@
                         <div class="panel-title">定时发送</div>
                         <div class="panel-subtitle">循环列表按周期自动发送</div>
                       </div>
-                      <button id="add-auto-item-btn" class="secondary-btn module-head-action">新增轮询项</button>
-                    </div>
-                    <div class="module-body">
-                      <div class="module-toolbar">
-                        <div class="field" style="flex: 1 1 auto;">
-                          <label for="auto-send-interval">循环周期 ms</label>
+                      <div class="module-head-inline">
+                        <div class="field-inline">
+                          <label for="auto-send-interval">间隔时间</label>
                           <input id="auto-send-interval" class="compact-input" type="number" min="100" step="100" value="1000">
                         </div>
+                        <button id="add-auto-item-btn" class="secondary-btn module-head-action">新增轮询项</button>
                       </div>
+                    </div>
+                    <div class="module-body">
                       <div id="auto-send-queue" class="queue-table"></div>
                     </div>
                   </section>
@@ -5633,7 +5888,7 @@
                       <button id="preset-send-switch" class="module-switch" type="button" aria-label="展开预设发送" aria-pressed="false"></button>
                       <div class="module-copy">
                         <div class="panel-title">预设发送</div>
-                        <div class="panel-subtitle">发送内容并等待期望接收</div>
+                        <div class="panel-subtitle">发送内容并等待期望接收，开关控制全局快捷键</div>
                       </div>
                       <button id="add-preset-item-btn" class="secondary-btn module-head-action">新增预设项</button>
                     </div>
@@ -5677,7 +5932,7 @@
     <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
       <div class="version-modal-head">
         <div>
-          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.2</div>
+          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.4</div>
           <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
         </div>
         <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
@@ -5690,11 +5945,13 @@
       <div class="version-modal-body">
         <div class="version-info-grid">
           <strong>当前版本</strong>
-          <span id="version-current-label">在线版本 v1.2</span>
+          <span id="version-current-label">在线版本 v1.4</span>
           <strong>工具手册</strong>
           <span><a href="https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/SerialWeb%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C" target="_blank" rel="noreferrer">查看工具手册</a></span>
           <strong>问题反馈</strong>
           <span><a href="https://docs.qq.com/form/page/DU1B2RWVyZnJERHdq" target="_blank" rel="noreferrer">提交问题反馈</a></span>
+          <strong>GitHub</strong>
+          <span><a href="https://github.com/Conductance-lab/SerialWeb" target="_blank" rel="noreferrer">查看 github 项目</a></span>
         </div>
         <div id="version-online-box" class="version-online-box">
           <strong>最新在线版本</strong>
@@ -5706,15 +5963,36 @@
         <div class="version-changelog">
           <div class="version-changelog-title">更新日志</div>
           <div class="version-release">
+            <strong>v1.4 版本 · 26/7/4</strong>
+            <ul>
+              <li>优化页面配色与扁平化设计，浅色/深色模式分离。</li>
+              <li>优化预设发送交互逻辑，通过开关控制全局快捷键的预设发送。</li>
+              <li>新增解析配置帮助提示，支持悬浮查看规则说明。</li>
+            </ul>
+          </div>
+          <div class="version-release">
+            <strong>v1.3 版本 · 26/6/30</strong>
+            <ul>
+              <li>新增柱状图，支持通道选择、纵轴缩放与自动量程。</li>
+              <li>name 标签匹配逻辑改为后缀数字匹配（name0↔int0），规则格式更灵活。</li>
+              <li>预设发送支持单字符快捷键，按下即发；自动全选，替换即生效。</li>
+              <li>修复 GitHub 历史版本仓库，优化离线版本使用体验。</li>
+              <li>优化紧凑显示模式、布局间距与各面板一致性。</li>
+              <li>优化通道交互、图框渲染、频域图通道筛选与 name 动态字段跟踪。</li>
+              <li>优化时间线回放、配置导入导出的图框状态同步与持久化。</li>
+              <li>优化模板解析、发送数据过滤与复选框样式统一。</li>
+            </ul>
+          </div>
+          <div class="version-release">
             <strong>v1.2 版本 · 26/6/11</strong>
             <ul>
-              <li>支持定时发送、触发发送和预设发送在十六进制模式下保留原始字节，并统一发送、匹配与显示逻辑。</li>
-              <li>支持高级发送展开区拖动调整高度，以及定时发送、触发发送、预设发送和十六进制结构表拖拽排序。</li>
-              <li>支持预设发送添加备注描述，并在串口监视器中显示预设发送、触发发送和匹配状态标识。</li>
+              <li>支持定时、触发和预设发送在十六进制模式下保留原始字节，统一发送匹配与显示逻辑。</li>
+              <li>支持高级发送展开区高度拖动调整及各模块拖拽排序。</li>
+              <li>支持预设发送添加备注描述，监视器中显示发送与匹配状态标识。</li>
               <li>优化十六进制结构解析，支持间隔符占位和帧尾留空的宽匹配逻辑。</li>
               <li>优化实时解析结果展示，支持横向滚动、展开和折叠。</li>
-              <li>修正在连接状态下修改串口参数没有立即生效的问题。</li>
-              <li>新增全局配置导入导出与还原，统一保存设备设置、发送内容、高级发送列表、解析配置和图框配置。</li>
+              <li>修正连接状态下修改串口参数未立即生效的问题。</li>
+              <li>新增全局配置导入导出与还原，统一保存设备、发送、解析及图框配置。</li>
             </ul>
           </div>
           <div class="version-release">
@@ -5729,15 +6007,15 @@
           <div class="version-release">
             <strong>v1.0 版本 · 26/5/24</strong>
             <ul>
-              <li>支持串口监视和设备连接管理，包括 VID/PID 显示、串口参数配置、硬件流控与 DTR/RTS/BREAK 信号控制。</li>
-              <li>支持深浅主题切换并自动跟随系统变换，以及宽屏/窄屏两种布局策略模式。</li>
-              <li>加入自动重连机制，可在设备插拔、连接丢失后尝试恢复连接。</li>
-              <li>加入失焦自动断连控制机制，便于在窗口失焦时释放串口并在恢复焦点后继续使用。</li>
-              <li>支持图形解析，包括文本解析、十六进制结构解析、自动识别解析规则和实时解析结果展示。</li>
-              <li>支持时域图、频域图绘制，可绑定解析通道并调整视图范围、图表高度和量程策略。</li>
-              <li>支持时间线系统、实时冻结、录制归档、回放、导入导出和解析配置复用。</li>
-              <li>时间线系统支持导入/导出原始文件 BIN / TXT / CSV，解析结果导出 TXT / CSV。</li>
-              <li>支持手动发送、定时发送、触发发送和预设发送等串口调试工作流。</li>
+              <li>支持串口监视、设备连接管理、VID/PID 显示、串口参数配置及硬件流控与信号控制。</li>
+              <li>支持深浅主题自动切换及宽屏/窄屏两种布局策略。</li>
+              <li>加入自动重连机制，设备插拔或连接丢失后可尝试恢复。</li>
+              <li>加入失焦自动断连机制，窗口失焦时释放串口，恢复焦点后继续使用。</li>
+              <li>支持图形解析，含文本解析、十六进制结构解析、自动识别规则及实时结果展示。</li>
+              <li>支持时域图与频域图绘制，可绑定解析通道并调整视图范围与量程策略。</li>
+              <li>支持时间线系统，含实时冻结、录制归档、回放、导入导出与解析配置复用。</li>
+              <li>时间线支持导入/导出 BIN/TXT/CSV 原始文件及 TXT/CSV 解析结果。</li>
+              <li>支持手动、定时、触发和预设发送等串口调试工作流。</li>
             </ul>
           </div>
         </div>
@@ -5748,7 +6026,7 @@
 
   <script>
     (() => {
-      const VERSION = '1.2';
+      const VERSION = '1.4';
       const ONLINE_VERSION_URL = 'https://conductance-lab.xyz/SerialWeb/';
       const VERSION_MODAL_SEEN_KEY = 'serialweb:version-modal-seen';
       const MAX_DERIVED_LOG_LINES = 320;
@@ -5790,7 +6068,8 @@
         logoModeSwitch: document.getElementById('logo-mode-switch'),
         serialStatusDot: document.getElementById('serial-status-dot'),
         serialStatusText: document.getElementById('serial-status-text'),
-        themeToggleBtn: document.getElementById('theme-toggle-btn'),
+        themeGroup: document.getElementById('menu-theme-group'),
+        themeOpts: document.querySelectorAll('#menu-theme-group .menu-theme-opt'),
         timelineSelect: document.getElementById('timeline-select'),
         stopRecordBtn: document.getElementById('stop-record-btn'),
         timelinePickerBtn: document.getElementById('timeline-picker-btn'),
@@ -5881,6 +6160,7 @@
         parserPreview: document.getElementById('parser-preview'),
         addTimeChartBtn: document.getElementById('add-time-chart-btn'),
         addFftChartBtn: document.getElementById('add-fft-chart-btn'),
+        addBarChartBtn: document.getElementById('add-bar-chart-btn'),
         clearChartsBtn: document.getElementById('clear-charts-btn'),
         chartList: document.getElementById('chart-list'),
         monitorMetaMode: document.getElementById('monitor-meta-mode'),
@@ -5923,9 +6203,12 @@
 
       const browserThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
+      const initialSavedTheme = (window.__serialWebInitialPrefs && (window.__serialWebInitialPrefs.theme === 'system' || window.__serialWebInitialPrefs.theme === 'dark' || window.__serialWebInitialPrefs.theme === 'light'))
+        ? window.__serialWebInitialPrefs.theme
+        : 'system';
       const state = {
         version: VERSION,
-        theme: browserThemeQuery.matches ? 'dark' : 'light',
+        theme: initialSavedTheme,
         layoutExpanded: false,
         parserMode: 'text',
         serial: {
@@ -6177,6 +6460,7 @@
         resetDerivedRuntime();
         state.ui.activeViewCache.signature = '';
         state.ui.chartRenderSignature = '';
+        if (refs.chartList) delete refs.chartList.dataset.rendered;
         state.charts.forEach((chart) => {
           chart.fftCache = {};
         });
@@ -6450,6 +6734,7 @@
 
       function clearRealtimeFreezeHover(rearm = true) {
         if (state.ui.liveFreezeMode === 'locked') return;
+        if (shouldPreserveTerminalSelectionDuringFreeze()) return;
         const changed = state.ui.liveFreezeMode !== 'none'
           || Boolean(state.ui.frozenRealtimeView)
           || state.ui.liveFreezeHoverSuppressed === rearm;
@@ -6459,6 +6744,28 @@
         if (changed) {
           refreshRealtimeFreezeView();
         }
+      }
+
+      function hasTerminalTextSelection() {
+        const selection = window.getSelection?.();
+        if (!selection || selection.isCollapsed || selection.rangeCount === 0) return false;
+        const anchor = selection.anchorNode;
+        const focus = selection.focusNode;
+        return Boolean(
+          refs.terminal
+          && ((anchor && refs.terminal.contains(anchor)) || (focus && refs.terminal.contains(focus)))
+        );
+      }
+
+      function shouldPreserveTerminalSelectionDuringFreeze() {
+        if (state.activeTimelineId !== 'realtime' || state.ui.liveFreezeMode === 'none') return false;
+        return hasTerminalTextSelection();
+      }
+
+      function shouldPreserveTerminalSelectionForMonitor() {
+        if (!hasTerminalTextSelection()) return false;
+        if (state.activeTimelineId === 'realtime') return state.ui.liveFreezeMode !== 'none';
+        return !state.playback.playing;
       }
 
       function syncRealtimeFreezeState() {
@@ -7138,19 +7445,28 @@
         applyUserConfigSnapshot(snapshot.userConfig, { persist: false });
       }
 
+      function resolveTheme(theme) {
+        if (theme === 'system') return browserThemeQuery.matches ? 'dark' : 'light';
+        return theme;
+      }
+
       function applyTheme() {
-        document.documentElement.classList.toggle('theme-dark', state.theme === 'dark');
-        appEl.classList.toggle('theme-dark', state.theme === 'dark');
-        refs.themeToggleBtn.textContent = state.theme === 'dark' ? '☾' : '☀';
-        refs.themeToggleBtn.title = state.theme === 'dark' ? '切换到浅色模式' : '切换到深色模式';
-        refs.themeToggleBtn.setAttribute('aria-label', refs.themeToggleBtn.title);
+        var resolved = resolveTheme(state.theme);
+        document.documentElement.classList.toggle('theme-dark', resolved === 'dark');
+        appEl.classList.toggle('theme-dark', resolved === 'dark');
+        if (refs.themeGroup) {
+          refs.themeGroup.classList.remove('pos-light', 'pos-dark');
+          if (state.theme === 'light') refs.themeGroup.classList.add('pos-light');
+          else if (state.theme === 'dark') refs.themeGroup.classList.add('pos-dark');
+          refs.themeOpts.forEach(function(opt) {
+            opt.classList.toggle('is-active', opt.dataset.theme === state.theme);
+          });
+        }
         window.__setSerialWebFavicon?.();
       }
 
       function syncThemeFromBrowser() {
-        const browserTheme = browserThemeQuery.matches ? 'dark' : 'light';
-        if (state.theme !== browserTheme) {
-          state.theme = browserTheme;
+        if (state.theme === 'system') {
           applyTheme();
           renderCharts();
         }
@@ -7162,11 +7478,16 @@
         browserThemeQuery.addListener(syncThemeFromBrowser);
       }
 
-      function toggleTheme() {
-        state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      function handleThemeChange(theme) {
+        state.theme = theme;
         applyTheme();
         renderCharts();
         scheduleLocalPrefsSave();
+      }
+
+      function toggleTheme() {
+        var next = state.theme === 'system' ? 'light' : state.theme === 'light' ? 'dark' : 'system';
+        handleThemeChange(next);
       }
 
       function shouldEnhanceSelect(select) {
@@ -9519,6 +9840,10 @@
       }
 
       function renderMonitor() {
+        if (shouldPreserveTerminalSelectionForMonitor()) {
+          renderTerminalJumpButton();
+          return;
+        }
         const sourceEvents = getActiveEvents();
         const sourceRawChunks = getActiveRawChunks();
         const shouldStickToBottom = Boolean(state.ui.terminalAtBottom);
@@ -9775,13 +10100,11 @@
                 <option value="checksum" ${row.kind === 'checksum' ? 'selected' : ''}>校验和</option>
                 <option value="gap" ${row.kind === 'gap' ? 'selected' : ''}>间隔符</option>
               </select>
-              <div class="binary-schema-cell">
-                ${usesLiteral
-                  ? `<input class="compact-input" data-binary-value value="${escapeHtml(row.value || '')}" placeholder="${escapeHtml(literalPlaceholder)}">`
-                  : usesChecksum
-                    ? `<input class="compact-input" value="SUM8" readonly tabindex="-1">`
-                    : `<select class="compact-select" data-binary-type>${buildBinaryTypeOptions(row.dataType || 'int8')}</select>`}
-              </div>
+              ${usesLiteral
+                ? `<input class="compact-input" data-binary-value value="${escapeHtml(row.value || '')}" placeholder="${escapeHtml(literalPlaceholder)}">`
+                : usesChecksum
+                  ? `<input class="compact-input" value="SUM8" readonly tabindex="-1">`
+                  : `<select class="compact-select" data-binary-type>${buildBinaryTypeOptions(row.dataType || 'int8')}</select>`}
               <input class="compact-input" data-binary-name value="${escapeHtml(row.name || '')}" placeholder="name 标签">
               <button class="mini-btn" type="button" aria-label="删除此行" title="删除此行" data-remove-binary-row ${state.parser.binarySchema.length > 1 ? '' : 'disabled'}>×</button>
             </div>
@@ -9860,21 +10183,148 @@
         return segments;
       }
 
-      function inferTemplateTokenKind(token, counters) {
-        if (/^[+-]?\d+\.\d+$/.test(token) || /^[+-]?\d+\.$/.test(token) || /^[+-]?\.\d+$/.test(token)) {
-          return `float${counters.float++}`;
-        }
-        if (/^[+-]?\d+$/.test(token)) {
-          return `int${counters.int++}`;
-        }
-        if (/^[A-Za-z]/.test(token)) {
-          return `name${counters.name++}`;
-        }
-        return `name${counters.name++}`;
+      function isAutoRuleFloatToken(token) {
+        return /^[+-]?(?:\d+\.\d+|\d+\.|\.\d+)$/.test(String(token || ''));
       }
 
-      function splitTemplateSegments(text) {
-        return String(text || '').match(/[A-Za-z0-9.+-]+|[^A-Za-z0-9.+-]+/g) || [];
+      function isAutoRuleIntToken(token) {
+        return /^[+-]?\d+$/.test(String(token || ''));
+      }
+
+      function isAutoRuleNameToken(token) {
+        return /^[\p{L}\p{N}](?:[\p{L}\p{N}_-]|[ \t]+(?=[\p{L}]))*$/u.test(String(token || ''));
+      }
+
+      function getAutoRuleValueKind(previousValue, currentValue) {
+        const previous = String(previousValue || '');
+        const current = String(currentValue || '');
+        if (isAutoRuleFloatToken(previous) || isAutoRuleFloatToken(current)) return 'float';
+        if (isAutoRuleIntToken(previous) && isAutoRuleIntToken(current)) return 'int';
+        if (isAutoRuleNameToken(previous) && isAutoRuleNameToken(current)) return 'name';
+        return '';
+      }
+
+      function tokenizeAutoRuleFrame(text) {
+        const source = String(text || '');
+        const matcher = /[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)|[\p{L}\p{N}](?:[\p{L}\p{N}_-]|[ \t]+(?=[\p{L}]))*/gu;
+        const segments = [];
+        let lastIndex = 0;
+        let match;
+        while ((match = matcher.exec(source)) !== null) {
+          if (match.index > lastIndex) {
+            segments.push({ type: 'literal', value: source.slice(lastIndex, match.index) });
+          }
+          const value = match[0];
+          const numericKind = isAutoRuleFloatToken(value) ? 'float' : isAutoRuleIntToken(value) ? 'int' : '';
+          segments.push({
+            type: 'value',
+            kind: numericKind || 'name',
+            value
+          });
+          lastIndex = match.index + value.length;
+        }
+        if (lastIndex < source.length) {
+          segments.push({ type: 'literal', value: source.slice(lastIndex) });
+        }
+        return segments;
+      }
+
+      function autoRuleShapesMatch(previousSegments, currentSegments) {
+        if (previousSegments.length !== currentSegments.length) return false;
+        for (let index = 0; index < previousSegments.length; index += 1) {
+          const previous = previousSegments[index];
+          const current = currentSegments[index];
+          if (previous.type !== current.type) return false;
+          if (previous.type === 'literal' && previous.value !== current.value) return false;
+          if (previous.type === 'value' && !getAutoRuleValueKind(previous.value, current.value)) return false;
+        }
+        return true;
+      }
+
+      function isAutoRuleDynamicNameSeparator(text) {
+        return /^[\s]*=[\s]*$/.test(String(text || ''));
+      }
+
+      function getAutoRuleNameValuePairs(segments) {
+        const pairs = [];
+        let index = 0;
+        while (index < segments.length) {
+          const spacer = segments[index];
+          if (spacer?.type === 'literal' && /^[\s,;，；]*$/.test(spacer.value)) {
+            index += 1;
+            continue;
+          }
+          const name = segments[index];
+          const separator = segments[index + 1];
+          const value = segments[index + 2];
+          if (
+            !name || name.type !== 'value' || name.kind !== 'name'
+            || !separator || separator.type !== 'literal' || !isAutoRuleDynamicNameSeparator(separator.value)
+            || !value || value.type !== 'value' || (value.kind !== 'int' && value.kind !== 'float')
+          ) {
+            return [];
+          }
+          pairs.push({ name, value, valueIndex: index + 2 });
+          index += 3;
+        }
+        return pairs;
+      }
+
+      function buildAutoDetectedNameValuePairRule(previousSegments, currentSegments, changedIndexes) {
+        const previousPairs = getAutoRuleNameValuePairs(previousSegments);
+        const currentPairs = getAutoRuleNameValuePairs(currentSegments);
+        if (currentPairs.length < 2 || previousPairs.length !== currentPairs.length) return '';
+        let hasChangedValue = false;
+        let valueKind = 'int';
+        for (let index = 0; index < currentPairs.length; index += 1) {
+          const previous = previousPairs[index];
+          const current = currentPairs[index];
+          if (previous.name.value !== current.name.value) return '';
+          if (!getAutoRuleValueKind(previous.value.value, current.value.value)) return '';
+          if (current.value.kind === 'float' || previous.value.kind === 'float') valueKind = 'float';
+          if (changedIndexes.has(current.valueIndex)) hasChangedValue = true;
+        }
+        return hasChangedValue ? `/name0=/${valueKind}0` : '';
+      }
+
+      function shouldPromoteStableAutoRuleName(segments, index, changedIndexes) {
+        const segment = segments[index];
+        if (!segment || segment.type !== 'value' || segment.kind !== 'name' || !isAutoRuleNameToken(segment.value)) return false;
+        const nextLiteral = segments[index + 1];
+        if (!nextLiteral || nextLiteral.type !== 'literal' || !isAutoRuleDynamicNameSeparator(nextLiteral.value)) return false;
+        for (let nextIndex = index + 2; nextIndex < segments.length; nextIndex += 1) {
+          const next = segments[nextIndex];
+          if (next.type === 'literal' && /[,;，；\r\n]/.test(next.value)) return false;
+          if (next.type === 'value') return changedIndexes.has(nextIndex);
+        }
+        return false;
+      }
+
+      function buildAutoDetectedRuleFromPair(previous, current) {
+        const previousSegments = tokenizeAutoRuleFrame(previous);
+        const currentSegments = tokenizeAutoRuleFrame(current);
+        if (!autoRuleShapesMatch(previousSegments, currentSegments)) return '';
+        const changedIndexes = new Set();
+        for (let index = 0; index < currentSegments.length; index += 1) {
+          if (currentSegments[index].type === 'value' && currentSegments[index].value !== previousSegments[index].value) {
+            changedIndexes.add(index);
+          }
+        }
+        if (!changedIndexes.size) return '';
+        const pairRule = buildAutoDetectedNameValuePairRule(previousSegments, currentSegments, changedIndexes);
+        if (pairRule) return pairRule;
+        const counters = { name: 0, int: 0, float: 0 };
+        return currentSegments.map((segment, index) => {
+          if (segment.type === 'literal') return segment.value;
+          const promoteStableName = !changedIndexes.has(index)
+            && shouldPromoteStableAutoRuleName(currentSegments, index, changedIndexes);
+          if (!changedIndexes.has(index) && !promoteStableName) return segment.value;
+          const kind = promoteStableName
+            ? 'name'
+            : getAutoRuleValueKind(previousSegments[index].value, segment.value);
+          if (!kind) return segment.value;
+          return `/${kind}${counters[kind]++}`;
+        }).join('');
       }
 
       function buildAutoDetectedRule(events) {
@@ -9884,21 +10334,11 @@
           .filter(Boolean)
           .slice(-12);
         if (candidates.length < 2) return '';
-        const current = candidates[candidates.length - 1];
-        const previous = candidates[candidates.length - 2];
-        const currentSegments = splitTemplateSegments(current);
-        const previousSegments = splitTemplateSegments(previous);
-        if (currentSegments.length !== previousSegments.length) return '';
-        for (let i = 1; i < currentSegments.length; i += 2) {
-          if (currentSegments[i] !== previousSegments[i]) return '';
+        for (let index = candidates.length - 1; index > 0; index -= 1) {
+          const rule = buildAutoDetectedRuleFromPair(candidates[index - 1], candidates[index]);
+          if (rule) return rule;
         }
-        const counters = { name: 0, int: 0, float: 0 };
-        return currentSegments.map((segment, index) => {
-          if (index % 2 === 0) {
-            return `/${inferTemplateTokenKind(segment, counters)}`;
-          }
-          return segment;
-        }).join('');
+        return '';
       }
 
       function renderTextRuleOverlay() {
@@ -9927,25 +10367,30 @@
         for (let i = 0; i < segments.length; i += 1) {
           const segment = segments[i];
           if (segment.type !== 'tag') continue;
-          if (segment.kind === 'name') {
-            const nextTag = segments.slice(i + 1).find((item) => item.type === 'tag');
-            if (!nextTag) {
-              placeholders.push({ key: `name${segment.index}`, value: '-' });
-            }
-            continue;
-          }
           placeholders.push({ key: `${segment.kind}${segment.index}`, value: '-' });
         }
         return placeholders;
+      }
+
+      function getSuffixBoundKey(groups, values, group, fallbackKey) {
+        const matchingName = groups.find((g) => g.kind === 'name' && g.index === group.index);
+        if (matchingName) {
+          const nameText = String(values?.[matchingName.raw] || '').trim();
+          if (nameText) return nameText;
+        }
+        return fallbackKey;
       }
 
       function getConfiguredTextFields(segments) {
         const fields = [];
         (segments || []).forEach((segment) => {
           if (segment.type !== 'tag') return;
-          const key = `parsed.${segment.kind}${segment.index}`;
+          if (segment.kind !== 'name') {
+            const hasMatchingName = segments.some((s) => s.type === 'tag' && s.kind === 'name' && s.index === segment.index);
+            if (hasMatchingName) return;
+          }
           fields.push({
-            key,
+            key: `parsed.${segment.kind}${segment.index}`,
             type: segment.kind === 'name' ? 'text' : 'numeric'
           });
         });
@@ -9999,10 +10444,10 @@
           groups.push({ groupIndex, kind: segment.kind, index: segment.index, raw: segment.raw });
           if (segment.kind === 'int') return '([+-]?\\d+)';
           if (segment.kind === 'float') return '([+-]?(?:\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+))';
-          return '([A-Za-z][A-Za-z0-9_.-]*)?';
+          return '([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)?';
         }).join('');
         return {
-          regex: new RegExp(`^${pattern}$`),
+          regex: new RegExp(`^${pattern}$`, 'u'),
           groups
         };
       }
@@ -10010,26 +10455,20 @@
       function buildTemplateValuePairs(groups, values) {
         const cards = [];
         const mappedValues = {};
-        let pendingLabel = '';
-        groups.forEach((group, index) => {
+        groups.forEach((group) => {
           const value = values[group.raw];
           if (group.kind === 'name') {
-            const nameText = String(value || '').trim();
-            const next = groups[index + 1];
-            if (next) {
-              pendingLabel = nameText;
-            } else if (nameText) {
-              cards.push({ key: nameText, value: nameText });
-              mappedValues[nameText] = nameText;
-            } else {
-              cards.push({ key: `name${group.index}`, value: '-' });
+            const hasMatchingValue = groups.some((g) => g.kind !== 'name' && g.index === group.index);
+            if (!hasMatchingValue && value != null && value !== '') {
+              const nameKey = `${group.kind}${group.index}`;
+              cards.push({ key: nameKey, value });
+              mappedValues[nameKey] = value;
             }
             return;
           }
-          const key = pendingLabel || `${group.kind}${group.index}`;
+          const key = getSuffixBoundKey(groups, values, group, `${group.kind}${group.index}`);
           cards.push({ key, value });
           mappedValues[key] = value;
-          pendingLabel = '';
         });
         return {
           cards,
@@ -10041,7 +10480,7 @@
         const groupIndex = segments.findIndex((item) => item.type === 'tag' && item.raw === group.raw);
         const literalBefore = groupIndex > 0 && segments[groupIndex - 1]?.type === 'literal' ? segments[groupIndex - 1].value : '';
         const literalAfter = groupIndex >= 0 && segments[groupIndex + 1]?.type === 'literal' ? segments[groupIndex + 1].value : '';
-        const finder = new RegExp(`${escapeRegex(literalBefore)}\\s*([A-Za-z][A-Za-z0-9_.-]*)\\s*${escapeRegex(literalAfter)}`);
+        const finder = new RegExp(`${escapeRegex(literalBefore)}\\s*([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)\\s*${escapeRegex(literalAfter)}`, 'u');
         const match = source.match(finder);
         return match ? match[1] : '';
       }
@@ -10056,6 +10495,25 @@
           return Number.isFinite(value) ? value : raw;
         }
         return raw;
+      }
+
+      function parseRepeatedTemplateNameValuePairs(source, groups) {
+        if (groups.length !== 2 || groups[0].kind !== 'name' || !['int', 'float'].includes(groups[1].kind)) return null;
+        const valuePattern = groups[1].kind === 'int'
+          ? '([+-]?\\d+)'
+          : '([+-]?(?:\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+))';
+        const pairRegex = new RegExp(`([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)\\s*=\\s*${valuePattern}`, 'gu');
+        const cards = [];
+        const values = {};
+        let match;
+        while ((match = pairRegex.exec(source)) !== null) {
+          const key = String(match[1] || '').trim();
+          if (!key) continue;
+          const value = convertTemplateValue(groups[1].kind, match[2]);
+          cards.push({ key, value });
+          values[key] = value;
+        }
+        return cards.length ? { cards, values } : null;
       }
 
       function applyTemplateRule(text, ruleText) {
@@ -10081,9 +10539,17 @@
             segments
           };
         }
+        const repeatedResult = parseRepeatedTemplateNameValuePairs(source, groups);
+        if (repeatedResult) {
+          return {
+            values: repeatedResult.values,
+            cards: repeatedResult.cards,
+            segments
+          };
+        }
         const numericTags = groups.filter((group) => group.kind !== 'name');
         if (!numericTags.length) return null;
-        const relaxedTokens = source.match(/[A-Za-z][A-Za-z0-9_.-]*|[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)/g) || [];
+        const relaxedTokens = source.match(/[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)|[\p{L}\p{N}](?:[\p{L}\p{N}_-]|[ \t]+(?=[\p{L}]))*/gu) || [];
         const relaxedMatches = [];
         let tokenIndex = 0;
         numericTags.forEach((group) => {
@@ -10415,7 +10881,6 @@
           }
         });
         if (hasNumeric) {
-          updateDerivedChartFrameStats(runtime, normalizedTimestamp);
           const chartIntervalMs = estimateDerivedChartIntervalMs(runtime);
           const frameIndex = Math.max(0, (Number(runtime.chartFrameCount) || 1) - 1);
           if (!Array.isArray(runtime.successfulFrames)) runtime.successfulFrames = [];
@@ -10445,6 +10910,7 @@
       }
 
       function processDerivedTextSample(runtime, sample, ruleText) {
+        if (sample.direction !== 'rx') return;
         const timestamp = normalizeTimestampMs(sample.timestamp);
         if (!runtime.textBaseTimestamp) runtime.textBaseTimestamp = timestamp;
         const relative = Math.max(0, timestamp - runtime.textBaseTimestamp);
@@ -10460,13 +10926,28 @@
           runtime.fieldTypes.set(key, 'numeric');
         });
         const parsed = parseTextSample(sample, ruleText);
-        if (!parsed || !parsed.cards?.length) return;
-        runtime.latestCards = parsed.cards.map((item) => ({ ...item }));
-        pushDerivedChartValues(runtime, parsed.values, timestamp, 'parsed');
+        if (parsed && parsed.cards?.length) {
+          if (!runtime.allCardsMap) runtime.allCardsMap = {};
+          parsed.cards.forEach(function(c) { runtime.allCardsMap[c.key] = c.value; });
+          runtime.latestCards = Object.keys(runtime.allCardsMap).map(function(k) { return { key: k, value: runtime.allCardsMap[k] }; });
+          if (ruleText && parsed.cards.length > 0) {
+            var ruleSegments = tokenizeTemplateRule(ruleText);
+            var rawTagNames = {};
+            ruleSegments.forEach(function(s) { if (s.type === 'tag') rawTagNames[s.kind + s.index] = true; });
+            if (!runtime.namePairedSet) runtime.namePairedSet = new Set();
+            parsed.cards.forEach(function(c) {
+              if (!rawTagNames[c.key] && typeof c.value === 'number') {
+                runtime.namePairedSet.add(c.key);
+              }
+            });
+          }
+          pushDerivedChartValues(runtime, parsed.values, timestamp, 'parsed');
+        }
+        updateDerivedChartFrameStats(runtime, timestamp);
       }
 
       function processDerivedBinaryChunk(runtime, chunk, schema) {
-        if (chunk.direction !== 'rx' && chunk.direction !== 'tx') return;
+        if (chunk.direction !== 'rx') return;
         const timestamp = normalizeTimestampMs(chunk.timestamp);
         if (!runtime.binaryBaseTimestamp) runtime.binaryBaseTimestamp = timestamp;
         const relative = Math.max(0, timestamp - runtime.binaryBaseTimestamp);
@@ -10487,8 +10968,11 @@
         const extracted = extractBinarySchemaFramesFromBytes(runtime.binaryRemainders[chunk.direction], schema);
         runtime.binaryRemainders[chunk.direction] = extracted.remainder;
         extracted.frames.forEach((frame) => {
-          runtime.latestCards = frame.cards.map((item) => ({ ...item }));
+          if (!runtime.allCardsMap) runtime.allCardsMap = {};
+          frame.cards.forEach(function(c) { runtime.allCardsMap[c.key] = c.value; });
+          runtime.latestCards = Object.keys(runtime.allCardsMap).map(function(k) { return { key: k, value: runtime.allCardsMap[k] }; });
           pushDerivedChartValues(runtime, frame.values, timestamp, 'parsed');
+          updateDerivedChartFrameStats(runtime, timestamp);
         });
       }
 
@@ -10600,7 +11084,14 @@
               return getConfiguredBinaryFields(state.parser.binarySchema);
             })();
         state.derived.numericSeries = runtime.numericSeries;
+        state.derived.configuredFields = configuredFields;
         state.derived.availableFields = mergeAvailableFields(configuredFields, runtime.fieldTypes);
+        if (runtime.namePairedSet && runtime.namePairedSet.size === 1) {
+          var uniqueName = runtime.namePairedSet.values().next().value;
+          state.derived.stableNameFields = ['parsed.' + uniqueName];
+        } else {
+          state.derived.stableNameFields = [];
+        }
         state.derived.recommendedRule = buildRecommendedRule(activeEvents);
         const chartIntervalMs = estimateDerivedChartIntervalMs(runtime);
         const chartTracks = buildDerivedChartTracks(runtime, chartIntervalMs);
@@ -10657,6 +11148,60 @@
         syncParserResultsExpandedUI();
       }
 
+      function refreshChartChannelLists() {
+        var allNumeric = state.derived.availableFields.filter(function(f) { return f.type === 'numeric' && f.key.startsWith('parsed.'); });
+        var configuredMap = {};
+        (state.derived.configuredFields || []).forEach(function(f) { configuredMap[f.key] = true; });
+        (state.derived.stableNameFields || []).forEach(function(k) { configuredMap[k] = true; });
+        var allMap = {};
+        allNumeric.forEach(function(f) { allMap[f.key] = f; });
+        refs.chartList?.querySelectorAll('[data-chart-id]').forEach(function(panel) {
+          var config = panel.querySelector('.chart-config.open');
+          if (!config) return;
+          var list = config.querySelector('.chart-channel-list');
+          if (!list) return;
+          var chartId = panel.dataset.chartId;
+          var chart = state.charts.find(function(c) { return c.id === chartId; });
+          if (!chart) return;
+          var isFft = chart.type === 'fft';
+          var showFields = isFft ? allNumeric : allNumeric;
+          var bound = chart.bindings || [];
+          var existingLabels = list.querySelectorAll('label');
+          var seenKeys = {};
+          existingLabels.forEach(function(label) {
+            var input = label.querySelector('input[data-chart-binding]');
+            if (!input) return;
+            var key = input.dataset.chartBinding;
+            seenKeys[key] = true;
+            if (allMap[key]) {
+              var canSelect = !isFft || configuredMap[key];
+              input.checked = bound.includes(key) && canSelect;
+              input.disabled = !canSelect;
+              label.style.opacity = canSelect ? '' : '0.45';
+              label.style.cursor = canSelect ? '' : 'not-allowed';
+            } else {
+              label.remove();
+            }
+          });
+          if (showFields.length) {
+            var oldPlaceholder = list.querySelector('.panel-subtitle');
+            if (oldPlaceholder) oldPlaceholder.remove();
+          }
+          showFields.forEach(function(field) {
+            if (seenKeys[field.key]) return;
+            var canSelect = !isFft || configuredMap[field.key];
+            var checked = (bound.includes(field.key) && canSelect) ? ' checked' : '';
+            var disabled = canSelect ? '' : ' disabled';
+            var style = canSelect ? '' : ' style="opacity:0.45;cursor:not-allowed"';
+            var html = '<label' + style + '><span>' + escapeHtml(getFieldDisplayLabel(field.key)) + '</span><input type="checkbox" data-chart-binding="' + escapeHtml(field.key) + '"' + checked + disabled + '></label>';
+            list.insertAdjacentHTML('beforeend', html);
+          });
+          if (!showFields.length) {
+            list.innerHTML = '<span class="panel-subtitle">暂无数值通道</span>';
+          }
+        });
+      }
+
       function renderDerivedViews() {
         const detectionReady = Boolean(state.derived.recommendedRule);
         refs.applyRecommendedRuleBtn.textContent = detectionReady ? '自动识别：可用' : '自动识别：不可用';
@@ -10666,6 +11211,7 @@
           state.ui.parserRecommendPromptRule = '';
         }
         renderTextRuleOverlay();
+        refreshChartChannelLists();
         refs.parserPreview.innerHTML = state.derived.resultCards.map((item) => {
           const isPlaceholder = item.value === '-' || item.value === undefined || item.value === null;
           const display = item.display ?? (isPlaceholder ? '-' : String(item.value));
@@ -10716,10 +11262,16 @@
       }
 
       function createChart(type) {
+        const normalizedType = type === 'fft' ? 'fft' : type === 'bar' ? 'bar' : 'time';
+        const chartTitle = normalizedType === 'time'
+          ? `时域图 ${chartIdCounter}`
+          : normalizedType === 'fft'
+            ? `频域图 ${chartIdCounter}`
+            : `柱状图 ${chartIdCounter}`;
         return {
           id: uid('chart'),
-          type,
-            name: type === 'time' ? `时域图 ${chartIdCounter}` : `频域图 ${chartIdCounter}` ,
+          type: normalizedType,
+          name: chartTitle,
           open: false,
           bindings: [],
           yAxisBindingKey: '',
@@ -10874,14 +11426,23 @@
         return deltas[Math.floor(deltas.length / 2)];
       }
 
-      function getChartSelectableFields() {
+      function getChartSelectableFields(forType) {
         return state.derived.availableFields.filter((field) => {
           if (field.type !== 'numeric') return false;
-          return field.key.startsWith('parsed.');
+          if (!field.key.startsWith('parsed.')) return false;
+          if (forType === 'fft') {
+            var configured = state.derived.configuredFields || [];
+            if (configured.some(function(f) { return f.key === field.key; })) return true;
+            var stable = state.derived.stableNameFields || [];
+            if (stable.indexOf(field.key) !== -1) return true;
+            return false;
+          }
+          return true;
         });
       }
 
-      function normalizeChartBindings(chart, selectableFields = getChartSelectableFields()) {
+      function normalizeChartBindings(chart, selectableFields) {
+        if (!selectableFields) selectableFields = getChartSelectableFields(chart && chart.type);
         const available = Array.isArray(selectableFields) ? selectableFields : [];
         if (!available.length) {
           chart.bindings = Array.isArray(chart.bindings) ? [...new Set(chart.bindings)] : [];
@@ -10893,17 +11454,16 @@
       }
 
       function getChartRenderSignature() {
-        const chartShape = state.charts.map((chart) => `${chart.id}:${chart.type}`).join('|');
-        const numericFields = getChartSelectableFields()
-          .map((field) => field.key)
-          .join('|');
-        return `${chartShape}__${numericFields}`;
+        return state.charts.map((chart) =>
+          `${chart.id}:${chart.type}:${(chart.bindings || []).sort().join(',')}:${chart.open ? '1' : '0'}:${chart.alignScale ? '1' : '0'}`
+        ).join('|');
       }
 
       function renderAutoSendQueue() {
         ensureAutoSendQueueItem();
         const allowRemove = state.autoSend.queue.length > 1;
-        refs.autoSendQueue.innerHTML = state.autoSend.queue.map((item) => {
+        const headHtml = '<div class="queue-send-head-shell"><div class="queue-send-head"><span></span><span>发送内容</span><span></span></div></div>';
+        refs.autoSendQueue.innerHTML = headHtml + state.autoSend.queue.map((item) => {
           const payloadValue = getFieldDisplayForMode(item, 'payload', 'payloadRawHex', state.settings.sendMode);
           const payloadAttrs = getFieldPreservedRawAttrs(item, 'payloadRawHex', payloadValue, state.settings.sendMode);
           return `
@@ -10959,8 +11519,9 @@
           <div class="preset-send-head-shell">
             <div class="preset-send-head">
               <span>发送内容</span>
-              <span>期望接收（可留空）</span>
+              <span>期望接收</span>
               <span>描述</span>
+              <span>快捷键</span>
               <span></span>
               <span></span>
             </div>
@@ -10976,8 +11537,9 @@
             <div class="preset-inline-row">
               <button class="reorder-drag-handle" type="button" title="拖动排序" aria-label="拖动排序" data-reorder-handle>↕</button>
               <input class="compact-input" data-preset-payload${payloadAttrs} value="${escapeHtml(payloadValue)}" placeholder="${escapeHtml(getSendModePlaceholder())}">
-              <input class="compact-input" data-preset-expected${expectedAttrs} value="${escapeHtml(expectedValue)}" placeholder="${escapeHtml(state.settings.rxDisplayMode === 'hex' ? '期望接收 HEX 内容' : '期望接收内容')}">
+              <input class="compact-input" data-preset-expected${expectedAttrs} value="${escapeHtml(expectedValue)}" placeholder="${escapeHtml('期望接收，留空不匹配')}">
               <input class="compact-input" data-preset-description value="${escapeHtml(item.description || '')}" placeholder="描述">
+              <input class="compact-input" data-preset-shortcut value="${escapeHtml(item.shortcut || '')}" placeholder="-" maxlength="1">
               <button class="mini-btn" data-send-preset>发送</button>
               <button class="mini-btn" data-remove-preset ${allowRemove ? '' : 'disabled'}>删除</button>
             </div>
@@ -11619,7 +12181,11 @@
           return;
         }
         if (mode === 'preset') {
-          toggleSendModule('preset');
+          state.presetSend.enabled = !state.presetSend.enabled;
+          ensurePresetSendItem();
+          scheduleLocalPrefsSave();
+          scheduleRefresh();
+          return;
         }
       }
 
@@ -11637,7 +12203,7 @@
         refs.presetSendModule.classList.toggle('hidden', !state.modules.presetSendOpen);
         refs.autoSendModule.classList.toggle('is-enabled', state.autoSend.enabled);
         refs.conditionSendModule.classList.toggle('is-enabled', state.conditionSend.enabled);
-        refs.presetSendModule.classList.toggle('is-enabled', state.modules.presetSendOpen);
+        refs.presetSendModule.classList.toggle('is-enabled', state.presetSend.enabled);
         refs.autoSendModule.classList.toggle('is-steady-success', autoSteady);
         refs.conditionSendModule.classList.remove('is-steady-success');
         refs.presetSendModule.classList.remove('is-steady-success');
@@ -11652,12 +12218,21 @@
       function renderChartPanel(chart) {
         const fieldItems = normalizeChartBindings(chart);
         const yAxisBindingKey = ensureChartYAxisBinding(chart);
-        const channelList = fieldItems.map((field) => `
-          <label>
-            <input type="checkbox" data-chart-binding="${escapeHtml(field.key)}" ${chart.bindings.includes(field.key) ? 'checked' : ''}>
-            <span>${escapeHtml(getFieldDisplayLabel(field.key))}</span>
-          </label>
-        `).join('') || '<span class="panel-subtitle">暂无数值通道</span>';
+        var configuredMap = {};
+        if (chart.type === 'fft') {
+          (state.derived.configuredFields || []).forEach(function(f) { configuredMap[f.key] = true; });
+          (state.derived.stableNameFields || []).forEach(function(k) { configuredMap[k] = true; });
+        }
+        const channelList = (chart.type === 'fft'
+          ? state.derived.availableFields.filter(function(f) { return f.type === 'numeric' && f.key.startsWith('parsed.'); })
+          : fieldItems
+        ).map((field) => {
+          var canSelect = chart.type !== 'fft' || configuredMap[field.key];
+          var checked = chart.bindings.includes(field.key) && canSelect ? ' checked' : '';
+          var disabled = canSelect ? '' : ' disabled';
+          var style = canSelect ? '' : ' style="opacity:0.45;cursor:not-allowed"';
+          return '<label' + style + '><span>' + escapeHtml(getFieldDisplayLabel(field.key)) + '</span><input type="checkbox" data-chart-binding="' + escapeHtml(field.key) + '"' + checked + disabled + '></label>';
+        }).join('') || '<span class="panel-subtitle">暂无数值通道</span>';
         const yAxisBindingOptions = [
           `<label class="toggle-row chart-align-toggle ${fieldItems.length > 1 ? '' : 'is-disabled'}">
             <div>
@@ -11676,6 +12251,15 @@
           chart.alignScale = true;
         }
 
+        const barConfig = chart.type === 'bar'
+          ? `
+          <div class="chart-config-section">
+            <div class="chart-config-field">
+              <label>数据绑定</label>
+              <div class="chart-channel-list">${channelList}</div>
+            </div>
+          </div>`
+          : '';
         const settingsIcon = `
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="3.2"></circle>
@@ -11742,12 +12326,12 @@
             </div>
             <div class="chart-view-chip ${canOpenChartViewPicker(chart) ? 'is-selectable' : ''}" data-chart-view-chip>${getChartViewChipLabel(chart)}</div>
             <div class="chart-config chart-flyout ${chart.open ? 'open' : ''}">
-              ${timeConfig}
+              ${chart.type === 'bar' ? barConfig : timeConfig}
             </div>
             <div class="chart-canvas-wrap" style="height:${chartHeight}px">
               ${yAxisBindingOptions ? `<div class="chart-axis-binding-picker chart-flyout">${yAxisBindingOptions}</div>` : ''}
               <div class="chart-axis-overlay chart-axis-overlay-y" data-chart-axis-y-label>缩放纵轴</div>
-              <div class="chart-axis-overlay chart-axis-overlay-x" data-chart-axis-x-label>缩放横轴</div>
+              ${chart.type !== 'bar' ? '<div class="chart-axis-overlay chart-axis-overlay-x" data-chart-axis-x-label>缩放横轴</div>' : ''}
               <canvas id="canvas-${chart.id}" width="1024" height="220"></canvas>
             </div>
             <div class="chart-panel-resize-handle chart-panel-resize-handle-bottom" data-chart-panel-resize="bottom"></div>
@@ -11756,16 +12340,11 @@
       }
 
       function renderCharts(force = false) {
-        const signature = getChartRenderSignature();
-        const shouldRebuild = force
-          || signature !== state.ui.chartRenderSignature
-          || !refs.chartList.dataset.rendered;
-        if (shouldRebuild) {
+        if (force || !refs.chartList.dataset.rendered) {
           refs.chartList.innerHTML = state.charts.length
             ? state.charts.map((chart) => renderChartPanel(chart)).join('')
             : '<div class="panel-subtitle">当前还没有图表，点击上方添加时域或频域图。</div>';
           refs.chartList.dataset.rendered = 'true';
-          state.ui.chartRenderSignature = signature;
           syncCustomSelects(refs.chartList);
         }
         scheduleChartPaint(force);
@@ -12176,10 +12755,6 @@
         const plotW = width - padding.left - padding.right;
         const plotH = height - padding.top - padding.bottom;
         const seriesList = keys.map((key) => {
-          if (key.startsWith('parsed.')) {
-            const track = state.derived.chartSeries?.[key];
-            if (Array.isArray(track) && track.length) return track;
-          }
           return state.derived.numericSeries[key] || [];
         });
         let maxTime = 10000;
@@ -12496,6 +13071,101 @@
         return entry;
       }
 
+      function drawBarChart(ctx, width, height, chart, keys) {
+        const padding = { top: 8, right: 12, bottom: 40, left: 46 };
+        const plotW = width - padding.left - padding.right;
+        const plotH = height - padding.top - padding.bottom;
+        var bindKeys = Array.isArray(chart.bindings) ? chart.bindings : [];
+        var barCount = Math.max(1, bindKeys.length);
+        var latestValues = [];
+        bindKeys.forEach(function(key, index) {
+          var series = state.derived.numericSeries[key];
+          var value = 0;
+          var color = CHART_COLORS[index % CHART_COLORS.length];
+          if (Array.isArray(series) && series.length) {
+            var last = series[series.length - 1];
+            if (last && Number.isFinite(last.v)) value = last.v;
+          }
+          latestValues.push({ key: key, value: value, color: color });
+        });
+        var autoMax = Math.max(1, ...latestValues.map(function(d) { return d.value; }));
+        var yMin = 0;
+        var yPadding = autoMax * 0.15;
+        var autoMaxPadded = autoMax + yPadding;
+        var yRangeObj;
+        if (chart.viewMode === 'manual') {
+          var manualYMin = 0;
+          var manualYMax = Number.isFinite(chart.viewBaseYMax) ? chart.viewBaseYMax : autoMaxPadded;
+          var manualZoom = Math.max(0.01, Number(chart.viewZoomY) || 1);
+          var manualOffset = Number(chart.viewOffsetY) || 0;
+          var center = (manualYMin + manualYMax) / 2;
+          var halfRange = ((manualYMax - manualYMin) / 2) / Math.max(1e-9, manualZoom);
+          center -= manualOffset * (manualYMax - manualYMin);
+          var rangeMin = Math.max(0, center - halfRange);
+          var rangeMax = center + halfRange;
+          if (!Number.isFinite(rangeMin) || !Number.isFinite(rangeMax) || rangeMin >= rangeMax) {
+            rangeMin = 0;
+            rangeMax = autoMaxPadded;
+          }
+          yRangeObj = { min: rangeMin, max: rangeMax, range: rangeMax - rangeMin };
+        } else {
+          yRangeObj = { min: yMin, max: autoMaxPadded, range: autoMaxPadded - yMin };
+        }
+        var segW = plotW / barCount;
+        var fillRatio = 0.55;
+        var barWidth = Math.max(8, Math.min(60, segW * fillRatio));
+        var xRangeObj = { min: 0, max: barCount, range: barCount };
+        var xTicks = latestValues.map(function(d, i) { return i + 0.5; });
+        var yTicks = buildAxisTicks(yRangeObj.min, yRangeObj.max, plotH, 54);
+        drawGrid(ctx, padding.left, padding.top, plotW, plotH, xRangeObj, yRangeObj, xTicks, yTicks);
+        drawAxes(ctx, width, height, padding, xRangeObj, yRangeObj, '通道', '幅值', xTicks, yTicks,
+          function(v) {
+            var idx = Math.round(v) - 1;
+            return (idx >= 0 && idx < latestValues.length) ? getFieldDisplayLabel(latestValues[idx].key) : '';
+          },
+          formatAxisValue
+        );
+        latestValues.forEach(function(d, i) {
+          if (d.value <= 0) return;
+          var centerX = padding.left + (i + 0.5) * segW;
+          var barLeft = centerX - barWidth / 2;
+          var barBottom = padding.top + plotH;
+          var barTop = barBottom - (d.value / Math.max(1e-9, yRangeObj.range)) * plotH;
+          var barHeight = Math.max(0, barBottom - barTop);
+          if (barHeight < 1) return;
+          ctx.save();
+          ctx.fillStyle = d.color;
+          ctx.shadowColor = 'rgba(0,0,0,0.12)';
+          ctx.shadowBlur = 4;
+          ctx.shadowOffsetY = 2;
+          ctx.beginPath();
+          ctx.roundRect(barLeft, barTop, barWidth, barHeight, [4, 4, 0, 0]);
+          ctx.fill();
+          ctx.restore();
+          ctx.save();
+          ctx.fillStyle = state.theme === 'dark' ? '#e5f0f5' : '#193048';
+          ctx.font = 'bold 11px "Segoe UI", "PingFang SC", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(formatAxisValue(d.value), centerX, barTop - 4);
+          ctx.restore();
+        });
+        chart.drawMeta = {
+          canvasWidth: width,
+          canvasHeight: height,
+          left: padding.left,
+          top: padding.top,
+          right: padding.left + plotW,
+          bottom: padding.top + plotH,
+          plotW: plotW,
+          plotH: plotH,
+          xAxisZoneHeight: padding.bottom,
+          yAxisZoneWidth: padding.left,
+          xRange: xRangeObj,
+          yRange: yRangeObj
+        };
+      }
+
       function drawFftChart(ctx, width, height, chart, keys) {
         const padding = { top: 8, right: 12, bottom: 36, left: 46 };
         const plotW = width - padding.left - padding.right;
@@ -12717,6 +13387,8 @@
         const seriesKeys = chart.bindings.filter((key) => Array.isArray(state.derived.numericSeries[key]) && state.derived.numericSeries[key].length);
         if (chart.type === 'time') {
           drawTimeChart(ctx, width, height, chart, seriesKeys);
+        } else if (chart.type === 'bar') {
+          drawBarChart(ctx, width, height, chart, seriesKeys);
         } else {
           drawFftChart(ctx, width, height, chart, seriesKeys);
         }
@@ -12852,6 +13524,7 @@
           successfulFrames: [],
           fieldTypes: new Map(),
           latestCards: [],
+          namePairedSet: new Set(),
           binaryRemainders: { rx: [], tx: [] }
         };
       }
@@ -13306,7 +13979,7 @@
       }
 
       function hydrateChartFromConfig(rawChart) {
-        const nextType = rawChart?.chartType === 'fft' ? 'fft' : 'time';
+        const nextType = rawChart?.chartType === 'fft' ? 'fft' : rawChart?.chartType === 'bar' ? 'bar' : 'time';
         const base = createChart(nextType);
         base.id = uid('chart');
         base.type = nextType;
@@ -13370,7 +14043,7 @@
         if (!snapshot) return;
         restoringLocalPrefs = true;
         try {
-          state.theme = snapshot.theme === 'dark' ? 'dark' : snapshot.theme === 'light' ? 'light' : state.theme;
+          state.theme = (snapshot.theme === 'system' || snapshot.theme === 'dark' || snapshot.theme === 'light') ? snapshot.theme : state.theme;
           state.layoutExpanded = Boolean(snapshot.layout?.expanded);
           state.ui.sidebarCollapsed = Boolean(snapshot.layout?.sidebarCollapsed);
           state.ui.parserResultsExpanded = Boolean(snapshot.layout?.parserResultsExpanded);
@@ -13429,7 +14102,8 @@
             enabled: item?.enabled !== false,
             payload: normalizePersistedSendContent(item?.payload || '', state.settings.sendMode),
             expected: normalizeSnapshotReceiveContent(item?.expected || '', state.settings.rxDisplayMode, receiveContentSchemaVersion),
-            description: String(item?.description || '')
+            description: String(item?.description || ''),
+            shortcut: String(item?.shortcut || '')
           })).map((item, index) => ({
             ...item,
             payloadRawHex: sanitizeHexInputValue(presets[index]?.payloadRawHex || '')
@@ -13628,7 +14302,8 @@
               payloadRawHex: sanitizeHexInputValue(item.payloadRawHex || ''),
               expected: String(item.expected || ''),
               expectedRawHex: sanitizeHexInputValue(item.expectedRawHex || ''),
-              description: String(item.description || '')
+              description: String(item.description || ''),
+              shortcut: String(item.shortcut || '')
             }))
           },
           sendDraft: {
@@ -13664,7 +14339,7 @@
         const target = event.target;
         if (!(target instanceof Element)) return false;
         return Boolean(target.closest(
-          '#theme-toggle-btn, #layout-toggle-btn, #serial-mode-btn, #parser-mode-btn, '
+          '#layout-toggle-btn, #serial-mode-btn, #parser-mode-btn, '
           + '.config-panel, .parser-panel, .charts-panel, #send-panel, #chart-list'
         ));
       }
@@ -13794,16 +14469,10 @@
           .filter((key) => key.startsWith('parsed.'));
         if (!bindings.length) return;
         const hasTime = state.charts.some((chart) => chart.type === 'time' && bindings.every((key) => chart.bindings.includes(key)));
-        const hasFft = state.charts.some((chart) => chart.type === 'fft' && bindings.every((key) => chart.bindings.includes(key)));
         if (!hasTime) {
           const timeChart = createChart('time');
           timeChart.bindings = [...bindings];
           state.charts.push(timeChart);
-        }
-        if (!hasFft) {
-          const fftChart = createChart('fft');
-          fftChart.bindings = [...bindings];
-          state.charts.push(fftChart);
         }
       }
 
@@ -13947,7 +14616,7 @@
             enable: refs.togglePresetSendEnableBtn,
             moduleSwitch: refs.presetSendSwitch,
             open: state.modules.presetSendOpen,
-            enabled: state.modules.presetSendOpen,
+            enabled: state.presetSend.enabled,
             suspended: false,
             pulseTone: getModePulseTone('preset'),
             steady: false
@@ -14290,6 +14959,8 @@
             const config = panel.querySelector('.chart-config');
             if (config) config.classList.toggle('open', chart.open);
           }
+          if (chart.open) refreshChartChannelLists();
+          state.ui.chartRenderSignature = getChartRenderSignature();
           return;
         }
         if (event.target.closest('[data-chart-auto]')) {
@@ -14321,6 +14992,7 @@
         let needsRebuild = false;
         if (event.target.hasAttribute('data-chart-title')) chart.name = event.target.value;
         if (event.target.hasAttribute('data-chart-binding')) {
+          if (event.target.disabled) return;
           const key = event.target.dataset.chartBinding;
           if (event.target.checked) {
             if (!chart.bindings.includes(key)) chart.bindings.push(key);
@@ -14349,6 +15021,7 @@
           } else if (state.ui.chartPickerOpenId === chart.id) {
             state.ui.chartPickerOpenId = '';
           }
+          state.ui.chartRenderSignature = getChartRenderSignature();
           syncChartViewUi(chart);
           drawChart(chart);
           return;
@@ -14461,6 +15134,16 @@
             : getTextInputRawHex(event.target);
         }
         if (event.target.hasAttribute('data-preset-description')) item.description = event.target.value;
+        if (event.target.hasAttribute('data-preset-shortcut')) {
+          var val = (event.target.value || '').trim();
+          item.shortcut = val.length > 0 ? val[0].toUpperCase() : '';
+          event.target.value = item.shortcut;
+          if (!state.presetSend.enabled) {
+            state.presetSend.enabled = true;
+            scheduleLocalPrefsSave();
+            scheduleRefresh();
+          }
+        }
       }
 
       function handlePresetItemClick(event) {
@@ -14506,7 +15189,11 @@
       }
 
       function attachEventListeners() {
-        refs.themeToggleBtn.addEventListener('click', toggleTheme);
+        refs.themeOpts.forEach(function(opt) {
+          opt.addEventListener('click', function() {
+            handleThemeChange(opt.dataset.theme);
+          });
+        });
         refs.systemMenuBtn.addEventListener('click', () => toggleMenu(refs.systemMenu));
         refs.downloadLocalLink?.addEventListener('click', downloadLocalIndexHtml);
         refs.versionInfoBtn?.addEventListener('click', (event) => {
@@ -14525,6 +15212,54 @@
         });
         document.addEventListener('keydown', (event) => {
           if (event.key === 'Escape') closeVersionModal();
+          if (event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+            var tag = event.target?.tagName || '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (event.target?.isContentEditable) return;
+            var key = event.key.toUpperCase();
+            var shortcuts = state.presetSend.items.filter(function(item) {
+              return item.shortcut && item.shortcut.toUpperCase() === key;
+            });
+            if (!state.presetSend.enabled) return;
+            if (shortcuts.length === 1) {
+              var item = shortcuts[0];
+              if (hasByteBackedValue(item.payload, item.payloadRawHex)) {
+                event.preventDefault();
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                  document.activeElement.blur();
+                }
+                var hasExp = hasByteBackedValue(item.expected, item.expectedRawHex);
+                var desc = getPresetDescription(item);
+                var txPayload = null;
+                var sendOpts = null;
+                var txEvt = null;
+                var txRaw = null;
+                var expRegd = false;
+                var p = getSendRecordPayloadArgs(item, 'payload', 'payloadRawHex');
+                txPayload = p.payload;
+                sendOpts = p.sendOptions;
+                sendPayload(txPayload, 'preset', sendOpts, {
+                  presetSend: true,
+                  presetDescription: desc,
+                  presetStatus: hasExp ? 'waiting' : 'sent',
+                  presetHasExpectation: hasExp,
+                  onCapturedEvent: function(evt, raw) {
+                    txEvt = evt;
+                    txRaw = raw;
+                    if (hasExp) {
+                      registerPresetExpectation(item, txEvt, txRaw);
+                      expRegd = true;
+                    }
+                  }
+                }).then(function(success) {
+                  if (!success) return;
+                  if (!expRegd) {
+                    registerPresetExpectation(item, txEvt, txRaw);
+                  }
+                });
+              }
+            }
+          }
         });
         document.addEventListener('click', closeMenus);
         document.addEventListener('pointerdown', beginReorderDrag);
@@ -14714,6 +15449,7 @@
           if (event.target.closest('#timeline-picker-btn')) return;
           if (event.target.closest('#timeline-freeze-btn')) return;
           if (event.target.closest('#timeline-picker-panel')) return;
+          if (getActiveTimeline() && !state.playback.playing && hasTerminalTextSelection()) return;
           if (refs.timelineRibbonShell.classList.contains('picker-open')) {
             closeTimelinePicker();
           } else {
@@ -14901,11 +15637,15 @@
 
         refs.addTimeChartBtn.addEventListener('click', () => {
           state.charts.push(createChart('time'));
-          scheduleRefresh();
+          renderCharts(true);
         });
         refs.addFftChartBtn.addEventListener('click', () => {
           state.charts.push(createChart('fft'));
-          scheduleRefresh();
+          renderCharts(true);
+        });
+        refs.addBarChartBtn.addEventListener('click', () => {
+          state.charts.push(createChart('bar'));
+          renderCharts(true);
         });
         refs.clearChartsBtn.addEventListener('click', () => {
           clearRealtimeHistoryData();
@@ -15046,12 +15786,17 @@
         refs.conditionRuleList.addEventListener('click', handleConditionRuleClick);
 
         refs.addPresetItemBtn.addEventListener('click', () => {
-          state.presetSend.items.push({ id: uid('queue'), enabled: true, payload: '', expected: '', description: '' });
+          state.presetSend.items.push({ id: uid('queue'), enabled: true, payload: '', expected: '', description: '', shortcut: '' });
           renderSendConfigLists('preset');
         });
         refs.presetSendList.addEventListener('input', handlePresetItemInput);
         refs.presetSendList.addEventListener('change', handlePresetItemInput);
         refs.presetSendList.addEventListener('click', handlePresetItemClick);
+        refs.presetSendList.addEventListener('focusin', (event) => {
+          if (event.target.hasAttribute('data-preset-shortcut')) {
+            setTimeout(function() { event.target.select(); }, 0);
+          }
+        });
 
         ['input', 'change', 'click'].forEach((type) => {
           document.addEventListener(type, (event) => {
