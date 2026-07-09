@@ -5509,7 +5509,7 @@
             <button id="system-menu-btn" class="icon-btn" title="System Menu">&#9776;</button>
             <div id="system-menu" class="floating-menu">
               <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
-                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.4</span>
+                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.5</span>
                 <span id="online-mode-chip" class="online-mode-chip">当前在线最新</span>
               </button>
               <div class="menu-theme-line">
@@ -5634,7 +5634,7 @@
                   </label>
                   <label id="flow-control-chip" class="toggle-row signal-chip" for="flow-control">
                     <div>
-                      <div class="mini-label">自动硬件流控</div>
+                      <div class="mini-label">RTS/CTS 流控</div>
                     </div>
                     <input id="flow-control" type="checkbox">
                   </label>
@@ -5932,7 +5932,7 @@
     <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
       <div class="version-modal-head">
         <div>
-          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.4</div>
+          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.5</div>
           <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
         </div>
         <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
@@ -5945,7 +5945,7 @@
       <div class="version-modal-body">
         <div class="version-info-grid">
           <strong>当前版本</strong>
-          <span id="version-current-label">在线版本 v1.4</span>
+          <span id="version-current-label">在线版本 v1.5</span>
           <strong>工具手册</strong>
           <span><a href="https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/SerialWeb%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C" target="_blank" rel="noreferrer">查看工具手册</a></span>
           <strong>问题反馈</strong>
@@ -5962,6 +5962,13 @@
         </div>
         <div class="version-changelog">
           <div class="version-changelog-title">更新日志</div>
+          <div class="version-release">
+            <strong>v1.5 版本 · 26/7/9</strong>
+            <ul>
+              <li>"自动硬件流控"更名为"RTS/CTS 流控"，名称更准确。</li>
+              <li>重构 TX/RX 收发与换行符显示逻辑，优化监视器渲染与事件处理。</li>
+            </ul>
+          </div>
           <div class="version-release">
             <strong>v1.4 版本 · 26/7/4</strong>
             <ul>
@@ -6026,7 +6033,7 @@
 
   <script>
     (() => {
-      const VERSION = '1.4';
+      const VERSION = '1.5';
       const ONLINE_VERSION_URL = 'https://conductance-lab.xyz/SerialWeb/';
       const VERSION_MODAL_SEEN_KEY = 'serialweb:version-modal-seen';
       const MAX_DERIVED_LOG_LINES = 320;
@@ -6052,7 +6059,6 @@
       const SEND_EXTENSION_MIN_HEIGHT = 120;
       const SEND_MONITOR_MIN_HEIGHT = 150;
       const DOWNLOAD_HTML_FILENAME = 'SerialWeb串口调试.html';
-      const RX_IDLE_SPLIT_MS = 100;
       const CHART_ZOOM_MIN = 0.02;
       const CHART_ZOOM_MAX = 240;
       const MODE_PULSE_MS = 500;
@@ -7036,12 +7042,11 @@
 
       function getSendPayloadArgs(displayValue, rawHex = '', sendOptions = state.settings) {
         const raw = sanitizeHexInputValue(rawHex || '');
-        if (raw) {
+        if (raw && sendOptions.sendMode === 'hex') {
           return {
             payload: raw,
             sendOptions: {
               ...sendOptions,
-              sendMode: 'hex',
               displayTextOverride: String(displayValue || '')
             }
           };
@@ -8063,21 +8068,17 @@
         return String(text ?? '').replace(/\r\n|\r|\n$/, '');
       }
 
-      function getRxIdleSplitMs() {
-        return RX_IDLE_SPLIT_MS;
-      }
-
-      function shouldRollRxLengths(textLength, byteLength) {
-        return (Number(textLength) || 0) >= MAX_RX_OPEN_EVENT_TEXT_CHARS
-          || (Number(byteLength) || 0) >= MAX_RX_OPEN_EVENT_BYTES;
-      }
-
       function getRxEventTextLength(event) {
         return String(event?.rawText || event?.text || '').length;
       }
 
       function getRxEventByteLength(event) {
         return Array.isArray(event?.bytes) ? event.bytes.length : 0;
+      }
+
+      function shouldRollRxLengths(textLength, byteLength) {
+        return (Number(textLength) || 0) >= MAX_RX_OPEN_EVENT_TEXT_CHARS
+          || (Number(byteLength) || 0) >= MAX_RX_OPEN_EVENT_BYTES;
       }
 
       function shouldRollRxActiveEvent(event) {
@@ -8099,14 +8100,7 @@
         if (!bytes?.length) return;
         const rawChunk = recordRawChunk('rx', bytes, timestamp, metadata);
         const source = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes || []);
-        const idleSplitMs = getRxIdleSplitMs();
         const baseTimestamp = normalizeTimestampMs(timestamp);
-        if (state.serial.rxActiveEvent) {
-          const lastTimestamp = normalizeTimestampMs(state.serial.rxActiveEvent.timestamp, baseTimestamp);
-          if ((baseTimestamp - lastTimestamp) >= idleSplitMs) {
-            finalizeRxActiveEvent(lastTimestamp, { processRules: true, syntheticSplit: true });
-          }
-        }
         let frameIndex = 0;
         const finalizeLine = (lineTimestamp, syntheticSplit = false) => {
           finalizeRxActiveEvent(lineTimestamp, { processRules: true, syntheticSplit });
@@ -8137,8 +8131,11 @@
         while (index < source.length) {
           const value = source[index];
           if (value === 0x0d || value === 0x0a) {
-            if (index > segmentStart) {
-              const segmentBytes = source.slice(segmentStart, index);
+            const endIndex = value === 0x0d && index + 1 < source.length && source[index + 1] === 0x0a
+              ? index + 2
+              : index + 1;
+            const segmentBytes = source.slice(segmentStart, endIndex);
+            if (segmentBytes.length) {
               forEachRxDisplayChunk(segmentBytes, (displayChunk) => {
                 upsertLine(displayChunk, baseTimestamp + frameIndex);
                 frameIndex += 1;
@@ -8146,12 +8143,8 @@
             }
             finalizeLine(baseTimestamp + frameIndex, false);
             frameIndex += 1;
-            if (value === 0x0d && index + 1 < source.length && source[index + 1] === 0x0a) {
-              index += 2;
-            } else {
-              index += 1;
-            }
-            segmentStart = index;
+            index = endIndex;
+            segmentStart = endIndex;
             continue;
           }
           index += 1;
@@ -8252,9 +8245,7 @@
       function rebuildEventsFromRawChunks(rawChunks = []) {
         const events = [];
         let activeRxEvent = null;
-        let lastRxTimestamp = 0;
-        const idleSplitMs = getRxIdleSplitMs();
-        const closeActiveRxEvent = (timestamp = lastRxTimestamp, syntheticSplit = false) => {
+        const closeActiveRxEvent = (timestamp, syntheticSplit = false) => {
           if (!activeRxEvent) return;
           activeRxEvent.timestamp = normalizeTimestampMs(timestamp, activeRxEvent.timestamp);
           activeRxEvent.metadata = {
@@ -8288,7 +8279,7 @@
           const bytes = Uint8Array.from(chunk.bytes || []);
           const timestamp = normalizeTimestampMs(chunk.timestamp);
           if (chunk.direction === 'tx') {
-            closeActiveRxEvent(lastRxTimestamp || timestamp, true);
+            if (activeRxEvent) closeActiveRxEvent(timestamp, true);
             events.push(buildEvent('tx', bytes, decodeBytes(bytes, state.settings.textEncoding), {
               timestamp,
               metadata: {
@@ -8298,27 +8289,23 @@
             }));
             return;
           }
-          if (activeRxEvent && lastRxTimestamp && (timestamp - lastRxTimestamp) >= idleSplitMs) {
-            closeActiveRxEvent(lastRxTimestamp, true);
-          }
           let segmentStart = 0;
           let index = 0;
           while (index < bytes.length) {
             const value = bytes[index];
             if (value === 0x0d || value === 0x0a) {
-              if (index > segmentStart) {
-                const segmentBytes = bytes.slice(segmentStart, index);
+              const endIndex = value === 0x0d && index + 1 < bytes.length && bytes[index + 1] === 0x0a
+                ? index + 2
+                : index + 1;
+              const segmentBytes = bytes.slice(segmentStart, endIndex);
+              if (segmentBytes.length) {
                 forEachRxDisplayChunk(segmentBytes, (displayChunk) => {
                   appendRxSegment(displayChunk, timestamp, chunk.id || '', chunk.metadata || {});
                 });
               }
               closeActiveRxEvent(timestamp, false);
-              if (value === 0x0d && index + 1 < bytes.length && bytes[index + 1] === 0x0a) {
-                index += 2;
-              } else {
-                index += 1;
-              }
-              segmentStart = index;
+              index = endIndex;
+              segmentStart = endIndex;
               continue;
             }
             index += 1;
@@ -8329,7 +8316,6 @@
               appendRxSegment(displayChunk, timestamp, chunk.id || '', chunk.metadata || {});
             });
           }
-          lastRxTimestamp = timestamp;
         });
         if (activeRxEvent) {
           activeRxEvent.metadata = {
@@ -8514,7 +8500,7 @@
           chip.classList.toggle('is-disabled', disabled);
         });
         refs.signalRtsChip.title = rtsManaged
-          ? '自动硬件流控生效时，RTS 由系统自动接管。'
+          ? 'RTS/CTS 流控生效时，RTS 由系统自动接管。'
           : '手动控制 RTS';
 
         const inputDefs = [
@@ -9342,11 +9328,14 @@
             await state.serial.sendInFlight.catch(() => {});
           }
           const task = (async () => {
+            const timestamp = nowPreciseMs();
+            if (state.serial.rxActiveEvent) {
+              finalizeRxActiveEvent(timestamp, { processRules: true, syntheticSplit: true });
+            }
             const sent = await performSerialWrite(bytes);
             if (!sent) {
               return false;
             }
-            const timestamp = nowPreciseMs();
             const txMetadata = { source, ...metadataFields };
             const rawChunk = recordRawChunk('tx', bytes, timestamp, txMetadata);
             const event = captureEvent('tx', bytes, displayText, {
@@ -9845,7 +9834,6 @@
           return;
         }
         const sourceEvents = getActiveEvents();
-        const sourceRawChunks = getActiveRawChunks();
         const shouldStickToBottom = Boolean(state.ui.terminalAtBottom);
         const showTimestamps = state.settings.appendTimestamp && !state.layoutExpanded;
         const showRawHex = state.settings.rxDisplayMode === 'hex';
@@ -9856,10 +9844,10 @@
           const directionLabel = event.direction === 'rx' ? 'RX' : event.direction === 'tx' ? 'TX' : event.direction.toUpperCase();
           const stamp = showTimestamps ? formatStamp(event.timestamp) : '';
           let payload = payloadOverride ?? event.text;
-          if (!payloadOverride && event.direction === 'rx' && showRawHex) {
+          if (!payloadOverride && showRawHex && (event.direction === 'rx' || event.direction === 'tx')) {
             payload = event.hex || bytesToHex(event.bytes);
           }
-          if ((event.direction === 'tx' || event.direction === 'rx') && !payload) {
+          if (showRawHex && (event.direction === 'tx' || event.direction === 'rx') && !payload) {
             payload = event.hex || '';
           }
           const inlineTags = getMonitorInlineTags(event.metadata);
@@ -9875,63 +9863,7 @@
               + String(stamp || '').length
           });
         };
-        if (showRawHex) {
-          const rawChunkMeta = new Map();
-          sourceEvents.forEach((event) => {
-            (event.metadata?.rawChunkIds || []).forEach((id) => {
-              const meta = rawChunkMeta.get(id) || {};
-              copyMonitorTagMetadata(meta, event.metadata);
-              rawChunkMeta.set(id, meta);
-            });
-          });
-          const rawEntries = [];
-          sourceRawChunks
-            .filter((chunk) => chunk.direction === 'rx' || chunk.direction === 'tx')
-            .forEach((chunk) => {
-              const bytes = Uint8Array.from(chunk.bytes || []);
-              if (!bytes.length) return;
-              const baseTimestamp = normalizeTimestampMs(chunk.timestamp, 0);
-              const metadata = {
-                ...(chunk.metadata || {}),
-                ...(rawChunkMeta.get(chunk.id) || {})
-              };
-              const pushRawHexLine = (lineBytes, lineIndex) => {
-                forEachRxDisplayChunk(lineBytes, (displayChunk, chunkIndex) => {
-                  rawEntries.push({
-                    direction: chunk.direction,
-                    timestamp: baseTimestamp + (lineIndex * 0.001) + (chunkIndex * 0.000001),
-                    bytes: Array.from(displayChunk || []),
-                    text: '',
-                    rawText: '',
-                    hex: bytesToHex(displayChunk || []),
-                    metadata
-                  });
-                });
-              };
-              let segmentStart = 0;
-              let lineIndex = 0;
-              for (let index = 0; index < bytes.length; index += 1) {
-                const value = bytes[index];
-                if (value !== 0x0d && value !== 0x0a) continue;
-                const endIndex = value === 0x0d && index + 1 < bytes.length && bytes[index + 1] === 0x0a
-                  ? index + 2
-                  : index + 1;
-                pushRawHexLine(bytes.slice(segmentStart, endIndex), lineIndex);
-                lineIndex += 1;
-                index = endIndex - 1;
-                segmentStart = endIndex;
-              }
-              if (segmentStart < bytes.length) {
-                pushRawHexLine(bytes.slice(segmentStart), lineIndex);
-              }
-            });
-          const systemEntries = sourceEvents.filter((event) => event.direction !== 'rx' && event.direction !== 'tx');
-          [...rawEntries, ...systemEntries]
-            .sort((a, b) => normalizeTimestampMs(a.timestamp, 0) - normalizeTimestampMs(b.timestamp, 0))
-            .forEach((event) => pushMonitorEntry(event, event.direction === 'rx' || event.direction === 'tx' ? (event.hex || bytesToHex(event.bytes)) : null));
-        } else {
-          sourceEvents.forEach((event) => pushMonitorEntry(event));
-        }
+        sourceEvents.forEach((event) => pushMonitorEntry(event));
         const visibleEntries = [];
         let totalChars = 0;
         for (let index = entries.length - 1; index >= 0; index -= 1) {
