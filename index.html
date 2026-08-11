@@ -2482,7 +2482,7 @@
     }
 
     .signal-output-row.secondary {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(74px, 1fr) minmax(74px, 1fr) minmax(94px, 1.25fr);
     }
 
     .signal-chip {
@@ -6255,6 +6255,7 @@
           blurReleaseActive: false,
           connectionEpoch: 0,
           rxActiveEvent: null,
+          pendingCR: false,
           deviceInfo: {
             vid: '-',
             pid: '-',
@@ -8040,6 +8041,7 @@
 
       function resetRxSegmentationState() {
         state.serial.rxActiveEvent = null;
+        state.serial.pendingCR = false;
       }
 
       function resetSerialSendQueue() {
@@ -8128,6 +8130,16 @@
         };
         let segmentStart = 0;
         let index = 0;
+        // 若上一 chunk 以孤立的 CR 结尾、而本 chunk 以 LF 开头，
+        // 说明它们原本是一组被读取边界拆开的 CRLF：直接消费掉该 LF，
+        // 避免产生多余的空行事件。
+        if (state.serial.pendingCR) {
+          state.serial.pendingCR = false;
+          if (source[0] === 0x0a) {
+            index = 1;
+            segmentStart = 1;
+          }
+        }
         while (index < source.length) {
           const value = source[index];
           if (value === 0x0d || value === 0x0a) {
@@ -8143,6 +8155,8 @@
             }
             finalizeLine(baseTimestamp + frameIndex, false);
             frameIndex += 1;
+            // 记录：本 chunk 以孤立的 CR 收尾，CRLF 的 LF 可能在下一次读取中到达
+            state.serial.pendingCR = value === 0x0d && endIndex === index + 1 && endIndex === source.length;
             index = endIndex;
             segmentStart = endIndex;
             continue;
@@ -8245,6 +8259,7 @@
       function rebuildEventsFromRawChunks(rawChunks = []) {
         const events = [];
         let activeRxEvent = null;
+        let pendingCR = false;
         const closeActiveRxEvent = (timestamp, syntheticSplit = false) => {
           if (!activeRxEvent) return;
           activeRxEvent.timestamp = normalizeTimestampMs(timestamp, activeRxEvent.timestamp);
@@ -8291,6 +8306,14 @@
           }
           let segmentStart = 0;
           let index = 0;
+          // 与实时路径一致：跨 chunk 拆分的 CRLF 消费后续 LF，避免多余空行
+          if (pendingCR) {
+            pendingCR = false;
+            if (bytes[0] === 0x0a) {
+              index = 1;
+              segmentStart = 1;
+            }
+          }
           while (index < bytes.length) {
             const value = bytes[index];
             if (value === 0x0d || value === 0x0a) {
@@ -8304,6 +8327,7 @@
                 });
               }
               closeActiveRxEvent(timestamp, false);
+              pendingCR = value === 0x0d && endIndex === index + 1 && endIndex === bytes.length;
               index = endIndex;
               segmentStart = endIndex;
               continue;
