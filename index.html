@@ -5509,7 +5509,7 @@
             <button id="system-menu-btn" class="icon-btn" title="System Menu">&#9776;</button>
             <div id="system-menu" class="floating-menu">
               <button id="version-info-btn" class="menu-static-line version-info-btn" type="button">
-                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.5</span>
+                <span id="runtime-mode-label" class="runtime-mode-label">关于 v1.6</span>
                 <span id="online-mode-chip" class="online-mode-chip">当前在线最新</span>
               </button>
               <div class="menu-theme-line">
@@ -5932,7 +5932,7 @@
     <section class="version-modal" role="dialog" aria-modal="true" aria-labelledby="version-modal-title">
       <div class="version-modal-head">
         <div>
-          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.5</div>
+          <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v1.6</div>
           <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
         </div>
         <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
@@ -5945,7 +5945,7 @@
       <div class="version-modal-body">
         <div class="version-info-grid">
           <strong>当前版本</strong>
-          <span id="version-current-label">在线版本 v1.5</span>
+          <span id="version-current-label">在线版本 v1.6</span>
           <strong>工具手册</strong>
           <span><a href="https://docs.conductance-lab.xyz/%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C/SerialWeb%E5%B7%A5%E5%85%B7%E6%89%8B%E5%86%8C" target="_blank" rel="noreferrer">查看工具手册</a></span>
           <strong>问题反馈</strong>
@@ -5962,6 +5962,14 @@
         </div>
         <div class="version-changelog">
           <div class="version-changelog-title">更新日志</div>
+          <div class="version-release">
+            <strong>v1.6 版本 · 26/9/6</strong>
+            <ul>
+              <li>修复串口接收数据特殊情况下监视器多出空行的问题。</li>
+              <li>优化设备连接管理中组件的显示效果。</li>
+              <li>优化图框的部分显示效果和操作逻辑。</li>
+            </ul>
+          </div>
           <div class="version-release">
             <strong>v1.5 版本 · 26/7/9</strong>
             <ul>
@@ -6033,7 +6041,7 @@
 
   <script>
     (() => {
-      const VERSION = '1.5';
+      const VERSION = '1.6';
       const ONLINE_VERSION_URL = 'https://conductance-lab.xyz/SerialWeb/';
       const VERSION_MODAL_SEEN_KEY = 'serialweb:version-modal-seen';
       const MAX_DERIVED_LOG_LINES = 320;
@@ -12295,13 +12303,58 @@
         `;
       }
 
+      function captureChartScrollState() {
+        const list = refs.chartList;
+        if (!list) return null;
+        const scrollSelectors = [
+          '.chart-config.open .chart-channel-list',
+          '.chart-axis-binding-picker'
+        ];
+        const state = { listTop: list.scrollTop || 0, panels: [] };
+        list.querySelectorAll('[data-chart-id]').forEach((panel) => {
+          const panelState = { id: panel.dataset.chartId, items: [] };
+          scrollSelectors.forEach((selector, selectorIndex) => {
+            panel.querySelectorAll(selector).forEach((node, index) => {
+              if (node.scrollHeight > node.clientHeight + 1 && node.scrollTop > 0) {
+                panelState.items.push({ selectorIndex, index, top: node.scrollTop });
+              }
+            });
+          });
+          if (panelState.items.length) state.panels.push(panelState);
+        });
+        return state;
+      }
+
+      function restoreChartScrollState(state) {
+        const list = refs.chartList;
+        if (!list || !state) return;
+        const scrollSelectors = [
+          '.chart-config.open .chart-channel-list',
+          '.chart-axis-binding-picker'
+        ];
+        if (state.listTop > 0) {
+          list.scrollTop = Math.min(state.listTop, Math.max(0, list.scrollHeight - list.clientHeight));
+        }
+        (state.panels || []).forEach((panelState) => {
+          const panel = list.querySelector(`[data-chart-id="${(typeof CSS !== 'undefined' && CSS.escape) ? CSS.escape(panelState.id) : panelState.id}"]`);
+          if (!panel) return;
+          panelState.items.forEach((item) => {
+            const node = panel.querySelectorAll(scrollSelectors[item.selectorIndex])[item.index];
+            if (!node) return;
+            node.scrollTop = Math.min(item.top, Math.max(0, node.scrollHeight - node.clientHeight));
+          });
+        });
+      }
+
       function renderCharts(force = false) {
         if (force || !refs.chartList.dataset.rendered) {
+          const scrollState = captureChartScrollState();
           refs.chartList.innerHTML = state.charts.length
             ? state.charts.map((chart) => renderChartPanel(chart)).join('')
             : '<div class="panel-subtitle">当前还没有图表，点击上方添加时域或频域图。</div>';
           refs.chartList.dataset.rendered = 'true';
           syncCustomSelects(refs.chartList);
+          restoreChartScrollState(scrollState);
         }
         scheduleChartPaint(force);
       }
@@ -15631,10 +15684,24 @@
         refs.chartList.addEventListener('mouseout', (event) => {
           const panel = event.target.closest?.('[data-chart-id]');
           if (!panel) return;
-          if (!event.target.closest?.('[data-chart-remove]') && !event.target.closest?.('.chart-order-tools')) return;
           const next = event.relatedTarget;
-          if (next instanceof Element && isPointerInsideChartOrderRegion(panel, event.clientX, event.clientY)) return;
-          panel.classList.remove('order-tools-open');
+          const nextIsElement = next instanceof Element;
+          const nextInsidePanel = nextIsElement && next.closest?.('[data-chart-id]') === panel;
+          const nextOverRegion = nextIsElement
+            && Boolean(next.closest?.('[data-chart-remove]') || next.closest?.('.chart-order-tools'));
+          const nextWithinBand = nextIsElement && isPointerInsideChartOrderRegion(panel, event.clientX, event.clientY);
+          // 指针离开了本图框（含移出窗口、移到别的图框）：无条件收起
+          if (!nextInsidePanel) {
+            panel.classList.remove('order-tools-open');
+            return;
+          }
+          // 指针仍在本图框内：只有当指针仍停留在“关闭”按钮/排序按钮，
+          // 或处于两者之间的过渡带时，才保持展开，否则立即收起。
+          if (panel.classList.contains('order-tools-open')
+            && !nextOverRegion
+            && !nextWithinBand) {
+            panel.classList.remove('order-tools-open');
+          }
         });
         refs.chartList.addEventListener('mousedown', (event) => {
           if (event.target.closest('.chart-toolbar') || event.target.closest('.chart-order-tools') || event.target.closest('.chart-axis-binding-picker')) {
