@@ -15,7 +15,7 @@
 1. **本文件（AGENTS.md）** —— 你正在读。
 2. **`index.html` 内嵌提示词**（只把一个 HTML 文件丢给 AI 时最有用，**无需联网**）：
    - 源码里搜索标记 `SERIALWEB-AGENT-PROMPT`；或
-   - 读惰性数据块 `<script type="text/plain" id="ai-agent-prompt">`（源码与 DOM 都可读，且不会执行）；或
+   - 读 `<body>` 末尾的隐藏文本节点 `<div id="ai-agent-prompt">`（对用户不可见、不可选中，但源码、DOM 与「整页可见文本提取」都能读到，且不会执行）；或
    - 运行时执行 `document.getElementById('ai-agent-prompt').textContent`
    - 正文唯一来源：`ai/agent-prompt.md`；修改后执行 `node tools/sync-agent-prompt.mjs` 注入，`--check` 可校验是否同步。
 3. **`llms.txt`**（站点根纯文本索引）—— 兼容“只能联网取纯文本”的 AI；另可抓取本文件的在线版与下面的指南。

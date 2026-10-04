@@ -182,7 +182,7 @@ A：功能一致。在线版始终是最新版；离线版是你下载到本地�
 页面 `<head>` 里内嵌了一段 Agent 提示词，三种读法任选：
 
 1. 在源码中搜索标记 **`SERIALWEB-AGENT-PROMPT`**
-2. 读取惰性数据块 `<script type="text/plain" id="ai-agent-prompt">`（源码与 DOM 都可读，且不会执行）
+2. 读取 `<body>` 末尾的隐藏文本节点 `<div id="ai-agent-prompt">`（对用户不可见、不可选中，但源码、DOM 与「整页可见文本提取」都能读到）
 3. 运行时执行 `document.getElementById('ai-agent-prompt').textContent`
 
 ### 开发指南（供 AI / 开发者直接使用）

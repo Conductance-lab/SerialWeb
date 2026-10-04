@@ -11,7 +11,7 @@
 ## 读取入口（三者内容一致）
 
 - `AGENTS.md`（仓库入口）
-- `index.html` 内嵌提示词：源码搜索 `SERIALWEB-AGENT-PROMPT`，或读 `document.getElementById('ai-agent-prompt').textContent`
+- `index.html` 内嵌提示词：源码搜索 `SERIALWEB-AGENT-PROMPT`，或读 `<body>` 末尾 `id="ai-agent-prompt"` 的元素（对用户不可见、不可选中，但整页文本提取能拿到），或 `document.getElementById('ai-agent-prompt').textContent`
   （正文来源 `ai/agent-prompt.md`，用 `node tools/sync-agent-prompt.mjs` 注入）
 - `llms.txt`（站点根纯文本索引）
 
