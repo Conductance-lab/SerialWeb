@@ -26,7 +26,7 @@ const BEGIN = "<!-- AI-PROMPT:BEGIN -->";
 const END = "<!-- AI-PROMPT:END -->";
 const checkOnly = process.argv.includes("--check");
 
-const canonical = readFileSync(canonicalPath, "utf8").replace(/\r\n/g, "\n").trimEnd();
+const canonical = readFileSync(canonicalPath, "utf8").replace(/\r\n/g, "\n").trim();
 if (/[<>]/.test(canonical)) {
   console.error("✗ ai/agent-prompt.md 中含有 < 或 >，放进 HTML 文本节点会破坏结构，请改用全角或删除。");
   process.exit(1);
@@ -55,8 +55,7 @@ for (const targetPath of targets) {
     BEGIN,
     "  <!-- 给 AI 的提示词：对用户视觉隐藏（不占位、不可选中），但保留真实文本节点，",
     "       源码、DOM 与「整页可见文本提取」都能读到；它不会被执行。 -->",
-    '  <div id="ai-agent-prompt" class="ai-agent-prompt">',
-    canonical,
+    '  <div id="ai-agent-prompt" class="ai-agent-prompt">' + canonical,
     "  </div>",
     "  " + END,
   ].join("\n");
