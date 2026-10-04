@@ -25,7 +25,8 @@
 请先读这份实战指南（含可复制的可运行骨架、分帧/解析/绘图/下位机协议要点、常见坑清单）：
 
 - 本地：`skills/html-webserial-app/SKILL.md`
-- 在线：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- GitHub：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- 国内站点：<https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md>
 
 它面向的是**从零构建**：例如读小车/传感器数据并画轨迹、画波形、下发指令，或生成配套的下位机程序。
 本仓库 `index.html` 只是**一个功能完整的参考实现**，供你在需要时对照阅读，不必照抄其复杂度。

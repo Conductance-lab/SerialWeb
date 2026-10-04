@@ -190,7 +190,8 @@ A：功能一致。在线版始终是最新版；离线版是你下载到本地�
 《用 HTML + Web Serial 构建串口上位机应用》—— 连接与自动重连、发送、接收分帧、编码、解析、绘图、录制回放、配套下位机协议与硬件设计，含可直接复制的可运行骨架与坑清单：
 
 - 本地：`skills/html-webserial-app/SKILL.md`
-- 在线：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- GitHub：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- 国内站点：<https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md>
 
 ### 其它 AI 读取入口
 
@@ -248,7 +249,7 @@ README.md                             # 本文件
 
 ### v2.0 · 26/10/5
 
-- 优化版本详情页的显示效果与信息布局。
+- 优化版本详情页的显示效果与信息布局，并修复下载提示弹窗被模糊层遮挡的问题。
 - 嵌入可供 AI 直接读取的开发 skill，可用于开发同类型应用，或以其为基座构建应用型程序。
 - 修复中文等多字节字符显示与解析乱码的问题。
 - 修复切换字符编码后历史数据未重新解析、ASCII / Latin-1 编解码不一致及 UTF-16LE 换行误判的问题。

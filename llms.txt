@@ -5,7 +5,9 @@
 
 ## 给 AI 的入口（按需取用）
 
-- 开发指南（**推荐先读**，含可复制骨架与坑清单）：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+- 开发指南（**推荐先读**，含可复制骨架与坑清单）：
+  - GitHub：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+  - 国内站点：https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md
 - 提示词正文（与 index.html 内嵌内容一致）：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/ai/agent-prompt.md
 - 仓库 AI 约定与结构：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/AGENTS.md
 - 参考实现源码（单文件，约 1.6 万行）：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/index.html

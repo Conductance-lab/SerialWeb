@@ -28,42 +28,55 @@ if (/<\/script>/i.test(canonical)) {
   process.exit(1);
 }
 
-const html = readFileSync(indexPath, "utf8");
-// 跟随 index.html 自身的换行符写回；校验时把两侧都归一成 LF 比较，
-// 这样编辑器把注入块统一成 CRLF 也不会导致 --check 误报未同步。
-const eol = html.includes("\r\n") ? "\r\n" : "\n";
-const blockLines = [
-  BEGIN,
-  '  <script type="text/plain" id="ai-agent-prompt">',
-  canonical,
-  "  </script>",
-  "  " + END,
+// 默认目标 index.html；也可追加额外目标，例如：node tools/sync-agent-prompt.mjs release/v2.0/index.html
+const targets = [
+  indexPath,
+  ...process.argv
+    .slice(2)
+    .filter((arg) => !arg.startsWith("--"))
+    .map((arg) => fileURLToPath(new URL(arg, root))),
 ];
-const block = blockLines.join("\n");
-const blockOut = blockLines.join(eol);
 
-const marker = new RegExp(
-  BEGIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[\\s\\S]*?" + END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-);
-const found = html.match(marker);
-if (!found) {
-  console.error(`✗ 在 index.html 中找不到标记区间 ${BEGIN} … ${END}`);
-  process.exit(1);
-}
+const rootPath = fileURLToPath(root);
+let failed = false;
 
-const synced = found[0].replace(/\r\n/g, "\n") === block;
-if (checkOnly) {
-  if (synced) {
-    console.log("✓ 已同步（index.html 的 AI 提示词块与 ai/agent-prompt.md 一致）");
-    process.exit(0);
+for (const targetPath of targets) {
+  const label = targetPath.slice(rootPath.length);
+  const html = readFileSync(targetPath, "utf8");
+  // 跟随目标文件自身的换行符写回；校验时把两侧都归一成 LF 比较，
+  // 这样编辑器把注入块统一成 CRLF 也不会导致 --check 误报未同步。
+  const eol = html.includes("\r\n") ? "\r\n" : "\n";
+  const blockLines = [
+    BEGIN,
+    '  <script type="text/plain" id="ai-agent-prompt">',
+    canonical,
+    "  </script>",
+    "  " + END,
+  ];
+  const block = blockLines.join("\n");
+  const blockOut = blockLines.join(eol);
+
+  const marker = new RegExp(
+    BEGIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[\\s\\S]*?" + END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  );
+  const found = html.match(marker);
+  if (!found) {
+    console.error(`✗ ${label} 中找不到标记区间 ${BEGIN} … ${END}`);
+    failed = true;
+    continue;
   }
-  console.error("✗ 未同步：请运行 `node tools/sync-agent-prompt.mjs`");
-  process.exit(1);
+
+  if (found[0].replace(/\r\n/g, "\n") === block) {
+    console.log(`✓ ${label} 已同步`);
+    continue;
+  }
+  if (checkOnly) {
+    console.error(`✗ ${label} 未同步：请运行 \`node tools/sync-agent-prompt.mjs\``);
+    failed = true;
+    continue;
+  }
+  writeFileSync(targetPath, html.replace(marker, () => blockOut));
+  console.log(`✓ 已把 ai/agent-prompt.md 注入 ${label}`);
 }
-if (synced) {
-  console.log("✓ 无需改动，已是最新。");
-  process.exit(0);
-}
-const next = html.replace(marker, () => blockOut);
-writeFileSync(indexPath, next);
-console.log("✓ 已把 ai/agent-prompt.md 注入 index.html（AI 提示词块已更新）。");
+
+process.exit(failed ? 1 : 0);

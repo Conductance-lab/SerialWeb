@@ -10,7 +10,8 @@
          2) 读取下方 <script type="text/plain" id="ai-agent-prompt"> 块（源码与 DOM 都可读、且不会执行），或
          3) 运行时执行：document.getElementById('ai-agent-prompt').textContent
        深度开发指南（建议联网）：
-         https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+         GitHub：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+         国内站点：https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md
        注意：下方 AI-PROMPT:BEGIN/END 之间的正文由 tools/sync-agent-prompt.mjs 从 ai/agent-prompt.md 注入，
        请勿手动编辑该区间。 -->
   <!-- AI-PROMPT:BEGIN -->
@@ -55,8 +56,8 @@ SERIALWEB-AGENT-PROMPT v1 — 给 AI 的提示词
 9) 无硬件也能开发：加模拟数据源、对解析函数做单测（把一帧拆成 1 字节一片喂进去）、桩化 navigator.serial。
 
 完整指南（骨架代码 / 分帧细则 / 绘图配方 / 下位机与硬件设计 / 坑清单）：
-  https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
-  （镜像：https://conductance-lab.github.io/SerialWeb/skills/html-webserial-app/SKILL.md）
+  GitHub：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+  国内站点：https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md
 其它 AI 入口：/llms.txt 、/AGENTS.md
 
 ━━━ 情况 B：用户要你修改这个 index.html 本身 ━━━
@@ -4890,7 +4891,8 @@ SERIALWEB-AGENT-PROMPT v1 — 给 AI 的提示词
       bottom: 8px;
       display: grid;
       gap: 8px;
-      z-index: 50;
+      /* 需高于版本详情页等弹窗的模糊层（.version-modal-backdrop = 120）与下拉菜单（180） */
+      z-index: 200;
       pointer-events: none;
     }
 
@@ -6182,7 +6184,7 @@ SERIALWEB-AGENT-PROMPT v1 — 给 AI 的提示词
           <div class="version-release">
             <strong>v2.0 版本 · 26/10/5</strong>
             <ul>
-              <li>优化版本详情页的显示效果与信息布局。</li>
+              <li>优化版本详情页的显示效果与信息布局，并修复下载提示弹窗被模糊层遮挡的问题。</li>
               <li>嵌入可供 AI 直接读取的开发 skill，可用于开发同类型应用，或以其为基座构建应用型程序。</li>
               <li>修复中文等多字节字符显示与解析乱码的问题。</li>
               <li>修复切换字符编码后历史数据未重新解析、ASCII / Latin-1 编解码不一致及 UTF-16LE 换行误判的问题。</li>

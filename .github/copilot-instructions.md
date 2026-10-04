@@ -18,7 +18,8 @@
 ## 首要：要用 HTML + Web Serial 做**自己的**串口上位机应用时，先读这份指南
 
 - `skills/html-webserial-app/SKILL.md` —— 连接/发送/接收分帧/解析/绘图/下位机协议设计的实战指南，含可直接复制的可运行骨架与坑清单
-- 在线：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- GitHub：<https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md>
+- 国内站点：<https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md>
 
 再读 `AGENTS.md` 了解本仓库定位（它是参考实现，不是你必须改造的对象）。
 

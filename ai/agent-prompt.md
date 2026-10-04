@@ -38,8 +38,8 @@ SERIALWEB-AGENT-PROMPT v1 — 给 AI 的提示词
 9) 无硬件也能开发：加模拟数据源、对解析函数做单测（把一帧拆成 1 字节一片喂进去）、桩化 navigator.serial。
 
 完整指南（骨架代码 / 分帧细则 / 绘图配方 / 下位机与硬件设计 / 坑清单）：
-  https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
-  （镜像：https://conductance-lab.github.io/SerialWeb/skills/html-webserial-app/SKILL.md）
+  GitHub：https://raw.githubusercontent.com/Conductance-lab/SerialWeb/main/skills/html-webserial-app/SKILL.md
+  国内站点：https://conductance-lab.xyz/SerialWeb/skills/html-webserial-app/SKILL.md
 其它 AI 入口：/llms.txt 、/AGENTS.md
 
 ━━━ 情况 B：用户要你修改这个 index.html 本身 ━━━
