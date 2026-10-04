@@ -28,35 +28,42 @@ if (/<\/script>/i.test(canonical)) {
   process.exit(1);
 }
 
-const block = [
+const html = readFileSync(indexPath, "utf8");
+// 跟随 index.html 自身的换行符写回；校验时把两侧都归一成 LF 比较，
+// 这样编辑器把注入块统一成 CRLF 也不会导致 --check 误报未同步。
+const eol = html.includes("\r\n") ? "\r\n" : "\n";
+const blockLines = [
   BEGIN,
   '  <script type="text/plain" id="ai-agent-prompt">',
   canonical,
   "  </script>",
   "  " + END,
-].join("\n");
+];
+const block = blockLines.join("\n");
+const blockOut = blockLines.join(eol);
 
-const html = readFileSync(indexPath, "utf8");
 const marker = new RegExp(
   BEGIN.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[\\s\\S]*?" + END.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 );
-if (!marker.test(html)) {
+const found = html.match(marker);
+if (!found) {
   console.error(`✗ 在 index.html 中找不到标记区间 ${BEGIN} … ${END}`);
   process.exit(1);
 }
 
-const next = html.replace(marker, block);
+const synced = found[0].replace(/\r\n/g, "\n") === block;
 if (checkOnly) {
-  if (next === html) {
+  if (synced) {
     console.log("✓ 已同步（index.html 的 AI 提示词块与 ai/agent-prompt.md 一致）");
     process.exit(0);
   }
   console.error("✗ 未同步：请运行 `node tools/sync-agent-prompt.mjs`");
   process.exit(1);
 }
-if (next === html) {
+if (synced) {
   console.log("✓ 无需改动，已是最新。");
   process.exit(0);
 }
+const next = html.replace(marker, () => blockOut);
 writeFileSync(indexPath, next);
 console.log("✓ 已把 ai/agent-prompt.md 注入 index.html（AI 提示词块已更新）。");
