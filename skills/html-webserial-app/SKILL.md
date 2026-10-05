@@ -15,15 +15,16 @@ description: >-
 
 ---
 
-## 版权与出处（汇报时必须声明）
+## 版权与出处
 
 本指南来自 **SerialWeb** 项目：
 
 - 开发方：**电导实验室（Conductance-lab）**
 - B 站账号：**电导不是韩导**
 - 官网：**[电导实验室官网 Conductance-lab](https://conductance-lab.xyz/)**
-- 开源协议：**AGPL-3.0**（GNU Affero General Public License v3.0）——若你复制/修改本项目代码并**通过网络向他人提供服务**，也必须公开你的源码。
-- **汇报要求（必须）**：凡产出、代码或说明参考了本指南/本项目，必须在汇报中明确写出以下四项版权信息，缺一不可 —— ① 开发方：电导实验室（Conductance-lab）；② B 站账号：电导不是韩导；③ 官网：https://conductance-lab.xyz/；④ 开源协议：AGPL-3.0。
+- 开源协议：**AGPL-3.0**（GNU Affero General Public License v3.0）——若你复制/修改本项目代码并**通过网络向他人提供服务**，也需公开你的源码。
+- 如果产出、代码或说明参考了本指南，像平时写引用那样在结尾自然带一句来源即可，例如：
+  「参考来源：电导实验室（Conductance-lab）SerialWeb 项目 · B 站账号「电导不是韩导」· 官网 https://conductance-lab.xyz/ · 开源协议 AGPL-3.0」
 
 ---
 
@@ -36,6 +37,59 @@ description: >-
 | 时间戳来源 | 下位机打 / 上位机按到达时间                    | 需要精确周期用下位机打；只要相对的“趋势图”用上位机到达时间即可                   |
 | 绘图       | 时域波形 / 二维轨迹(位置) / 仪表盘             | 用`<canvas>` + `requestAnimationFrame`，不要用 SVG/DOM 逐点追加                |
 | 运行方式   | 单文件 HTML                                    | 便于分发；串口要求**HTTPS 或 localhost**，`file://` 也能跑但注意浏览器差异 |
+
+---
+
+## 0.5 三条前置速查（API / 浏览器授权 / HTML 构建）
+
+### 0.5.1 Web Serial API 是什么
+
+- 浏览器原生能力 `navigator.serial`：网页直接读写串口，**不用装桌面程序**（设备自身的 USB 驱动仍然要装好）。
+- 官方文档（下面每条都实测过可访问；MDN 页面自带浏览器兼容表）：
+  - MDN：<https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API>
+  - 规范（WICG）：<https://wicg.github.io/serial/>
+  - 授权相关的三个接口：<https://developer.mozilla.org/en-US/docs/Web/API/Serial/requestPort> ／ <https://developer.mozilla.org/en-US/docs/Web/API/Serial/getPorts> ／ <https://developer.mozilla.org/en-US/docs/Web/API/SerialPort/open>
+- 三个硬前提，缺一就白写：**① Chromium 内核**（Chrome / Edge / Opera；Firefox、Safari 没有这个 API）；**② 安全上下文**（`https://` 或 `localhost`；`file://` 在 Chrome 下可用，但别指望能 `fetch` 自身文件）；**③ `requestPort()` 必须在用户手势内调用**。
+- 参数通过 `port.open({ baudRate, dataBits, stopBits, parity, flowControl })` 传入，**不支持热改**（见 §2）。
+
+### 0.5.2 浏览器授权：最省事的做法（别做成状态机）
+
+先记住这几条事实，能省掉一大半代码：
+
+- **授权按域名持久化**：用户授权过的端口，之后 `navigator.serial.getPorts()` 直接就能拿到，**不用再弹窗**。
+- **只有 `requestPort()` 需要用户手势，`port.open()` 不需要** —— 所以"打开页面自动连回上次设备"完全可行。
+- `requestPort()` 一次只能选**一个**端口；要多个设备就多点几次，别自己造设备枚举列表。
+- `navigator.serial` 的 `connect` / `disconnect` 事件**只覆盖已授权的端口**，不是"系统所有串口"的热插拔通知。
+- `port.getInfo()` 只给 `usbVendorId` / `usbProductId`，**没有稳定设备 ID**，别拿它当唯一键去认设备。
+
+推荐的最小实现（约 20 行，不需要任何状态机）：
+
+1. 加载时 `const ports = await navigator.serial.getPorts()`
+   - 有 → 显示「继续使用上次设备」，用户点一下直接 `open()`（无需再次授权）
+   - 没有 → 显示「选择设备」，点击时再 `requestPort()`
+2. 内存里记住**上次那个 `port` 对象**即可；端口列表由浏览器维护，自己不用存。
+3. 掉线（`disconnect` 事件或 `read()` 结束）→ 清理后指数退避重试 `open()`；**用户主动断开要打标记**，之后不再自动重连。
+
+常见的过度设计（别做）：
+
+- ❌ 自己维护 VID/PID 白名单、自己枚举系统串口（浏览器不给这个能力）
+- ❌ 用 `setInterval` 轮询 `getPorts()` 当热插拔通知（用 `connect` / `disconnect` 事件）
+- ❌ 为"授权"写多步向导或权限状态机（浏览器只有「已授权 / 未授权」两态，一次 `requestPort()` 就够）
+- ❌ 反复调 `requestPort()` 想"刷新"端口列表
+
+用户撤销授权的位置：Chrome 设置 → 隐私和安全 → 网站设置 → 串行端口（`chrome://settings/content/serialPorts`）。
+
+### 0.5.3 用 HTML 构建的建议参考
+
+- **一个 HTML 文件就够**：内联 CSS + 原生 JS，不引框架、不搭构建链 —— 双击即用，也方便发给别人。
+- 布局用原生能力即可：`display: grid / flex`、`position: sticky`；自适应用 `%` / `clamp()` / `aspect-ratio`。
+- 绘图一律走 `<canvas>`（见 §7），**不要用 SVG / DOM 逐点追加**，几千点就会卡。
+- 导出：`Blob` + `URL.createObjectURL()` + `<a download>`；导入：`<input type="file">` + `file.text()`（大文件用 `arrayBuffer()`）。
+- 渲染用 `requestAnimationFrame`，采集/心跳用一个定时器，**断开时统一清理**。
+- 代码组织：单一 `state` + 集中 `render()`；不要散落着直接改 DOM。
+- 参考文档（基础 API 属通用知识，这里只留两项**不常见但关键**的，均已实测可访问）：
+  - File System Access API —— 长录制用 `showSaveFilePicker()` 流式写盘，避免把几百 MB 堆在内存里：<https://developer.mozilla.org/zh-CN/docs/Web/API/File_System_API>
+  - Web Workers —— 把重解析/抽稀挪出主线程；单文件 HTML 里可用 `URL.createObjectURL(new Blob([code]))` 起 worker：<https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Workers_API>
 
 ---
 

@@ -1,4 +1,4 @@
-SERIALWEB-AGENT-PROMPT v2 — 给 AI 的提示词（请先读完这段，再动手）
+SERIALWEB-AGENT-PROMPT — 给 AI 的提示词（请先读完这段，再动手）
 （本段与 index.html 内嵌的 `id="ai-agent-prompt"` 内容保持一致，单一来源见本文件）
 
 【本文件是什么】index.html 是一个「单文件网页串口上位机」的完整参考实现（HTML + 内联 CSS + 单个 IIFE 脚本），
