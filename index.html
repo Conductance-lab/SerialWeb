@@ -5036,23 +5036,17 @@
       color: var(--accent-strong);
     }
 
+    /* 配色全部取自主题变量，浅色/深色自动跟随，无需单独覆盖 */
     .version-hero {
       position: relative;
       display: grid;
       gap: 12px;
       padding: 16px 18px;
       border-radius: 16px;
-      border: 1px solid rgba(86, 114, 205, 0.26);
+      border: 1px solid var(--border-strong);
       background:
-        radial-gradient(120% 140% at 10% 0%, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0) 62%),
-        linear-gradient(140deg, rgba(86, 114, 205, 0.16), rgba(86, 114, 205, 0.04));
-    }
-
-    body.theme-dark .version-hero {
-      border-color: rgba(129, 140, 248, 0.32);
-      background:
-        radial-gradient(120% 140% at 10% 0%, rgba(99, 102, 241, 0.34), rgba(99, 102, 241, 0) 62%),
-        linear-gradient(140deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05));
+        radial-gradient(130% 150% at 8% 0%, var(--accent-soft), transparent 62%),
+        var(--bg-panel);
     }
 
     .version-hero-top {
@@ -5069,8 +5063,9 @@
       display: grid;
       place-items: center;
       border-radius: 13px;
-      background: linear-gradient(140deg, #4f6ef7, #8b5cf6);
-      box-shadow: 0 6px 16px rgba(79, 110, 247, 0.3);
+      background: var(--accent);
+      box-shadow: 0 6px 16px var(--accent-soft);
+      /* 前景固定白色：深浅两种主题下图标都保持白色 */
       color: #ffffff;
     }
 
@@ -5120,21 +5115,21 @@
       padding: 8px 14px;
       border-radius: 10px;
       border: 0;
-      background: linear-gradient(135deg, #4f6ef7, #8b5cf6);
+      background: var(--accent);
       color: #ffffff;
       font-size: 12.5px;
       font-weight: 850;
       text-align: center;
       text-decoration: none;
       white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
+      box-shadow: 0 4px 12px var(--accent-soft);
       cursor: pointer;
       transition: filter 0.14s ease, box-shadow 0.14s ease, border-radius 0.16s ease;
     }
 
     .version-hero-download:hover {
       filter: brightness(1.07);
-      box-shadow: 0 6px 16px rgba(79, 110, 247, 0.38);
+      box-shadow: 0 6px 16px var(--accent-soft);
       text-decoration: none;
     }
 
