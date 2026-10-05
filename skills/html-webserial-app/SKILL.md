@@ -45,7 +45,7 @@ description: >-
 ### 0.5.1 Web Serial API 是什么
 
 - 浏览器原生能力 `navigator.serial`：网页直接读写串口，**不用装桌面程序**（设备自身的 USB 驱动仍然要装好）。
-- 官方文档（下面每条都实测过可访问；MDN 页面自带浏览器兼容表）：
+- 官方文档（MDN 页面自带浏览器兼容表）：
   - MDN：<https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API>
   - 规范（WICG）：<https://wicg.github.io/serial/>
   - 授权相关的三个接口：<https://developer.mozilla.org/en-US/docs/Web/API/Serial/requestPort> ／ <https://developer.mozilla.org/en-US/docs/Web/API/Serial/getPorts> ／ <https://developer.mozilla.org/en-US/docs/Web/API/SerialPort/open>
@@ -87,7 +87,7 @@ description: >-
 - 导出：`Blob` + `URL.createObjectURL()` + `<a download>`；导入：`<input type="file">` + `file.text()`（大文件用 `arrayBuffer()`）。
 - 渲染用 `requestAnimationFrame`，采集/心跳用一个定时器，**断开时统一清理**。
 - 代码组织：单一 `state` + 集中 `render()`；不要散落着直接改 DOM。
-- 参考文档（基础 API 属通用知识，这里只留两项**不常见但关键**的，均已实测可访问）：
+- 参考文档（基础 API 属通用知识，这里只留两项**不常见但关键**的）：
   - File System Access API —— 长录制用 `showSaveFilePicker()` 流式写盘，避免把几百 MB 堆在内存里：<https://developer.mozilla.org/zh-CN/docs/Web/API/File_System_API>
   - Web Workers —— 把重解析/抽稀挪出主线程；单文件 HTML 里可用 `URL.createObjectURL(new Blob([code]))` 起 worker：<https://developer.mozilla.org/zh-CN/docs/Web/API/Web_Workers_API>
 
@@ -384,8 +384,78 @@ while (能找到帧尾) { 取出一整帧; 在 buffer 里删掉; 处理这一帧
 - **时域/频域**：
   - 时域：固定时间窗（如最近 10s）；X 轴用相对时间。
   - 频域：真要 FFT 就自己实现 radix-2（长度取 2 的幂），或只画“幅度包络”；注意加窗（Hanning）减少泄漏。
-- 渲染点数上限：**每帧不超过几千点**（超过就抽稀），否则浏览器会掉帧甚至卡死。
+- 渲染点数：**别过度优化**。900×240 CSS px @DPR 1.75、单通道折线、每帧全量重绘时，窗口内 5 万点约 **0.9ms/帧**、20 万点约 **3.3ms/帧**，都在 16.7ms 预算内；「每秒 1 万次写入 + 淘汰最旧」用对象数组 + `shift()` 也只有 ~2.3ms/s。真正需要抽稀的是**多通道叠加 / 4K 高 DPR / 低端设备**，那时按「**像素列取 min/max**」抽稀（保住毛刺），**不要**"每 k 个点取一个"（会把尖峰抹平）。
 - 需要多通道/多图时：每图一个 canvas，通道绑定用“字段列表 + 勾选”，并保存到 `localStorage`。
+
+### 7.1 像显示器一样持续滚动（时域波形最容易写错的地方）
+
+要做出"像示波器一样一直往左滚"的效果，关键**不在性能，而在 X 轴怎么推进**。AI 最常见的三种错法：
+
+| 错法 | 现象 |
+| --- | --- |
+| 把 X 量程设成数据的 min/max（自适应） | 波形**不滚动**，而是被越压越扁，时间尺度一直在变 |
+| 用点数 / 数组下标当 X 轴 | 丢包或卡顿时波形会**漂移**；暂停恢复后时间轴错位 |
+| 没有新数据就不推进窗口 | 看起来"卡住了"，不像示波器（真实示波器时间一直在走） |
+
+**正确模型**：X 轴是**时间窗口** `[now - windowMs, now]`，每帧按**真实时间**推进；数据只负责提供点。
+
+```js
+/* 滚动波形：环形缓冲 + 时间窗口 + 每帧一次 */
+const CAP = 60000;                 // 缓冲容量（点数），按“最长要回看多久 × 采样率”定
+const tBuf = new Float64Array(CAP); // 时间戳（ms）
+const vBuf = new Float32Array(CAP);
+let head = 0, count = 0, dirty = true;
+
+function push(tMs, v) {
+  tBuf[head] = tMs; vBuf[head] = v;
+  head = (head + 1) % CAP;
+  if (count < CAP) count++;
+  dirty = true;                    // 只置脏标记，绝不在数据回调里直接画
+}
+
+const WINDOW_MS = 10000;           // 显示最近 10 秒
+function renderRolling(nowMs) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== w * dpr || cv.height !== h * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const t1 = nowMs, t0 = t1 - WINDOW_MS;   // ← 关键：窗口跟着“现在”走，所以它一直在滚
+  const mid = h / 2, k = h / 2 - 8;        // 固定量程（如 ±1）。别用数据自适应，否则会被压扁
+
+  ctx.beginPath();
+  let col = -1, minV = Infinity, maxV = -Infinity;
+  for (let n = 0; n < count; n++) {                       // 由旧到新遍历环形缓冲
+    const i = (head - count + n + CAP) % CAP;
+    const t = tBuf[i];
+    if (t < t0 || t > t1) continue;                       // 只画窗口内的点
+    const v = vBuf[i];
+    const c = Math.floor(((t - t0) / WINDOW_MS) * w);     // 落在哪个像素列
+    if (c !== col) {                                      // 每列取 min/max，毛刺不会被抹掉
+      if (col >= 0) { ctx.moveTo(col, mid - maxV * k); ctx.lineTo(col, mid - minV * k); }
+      col = c; minV = Infinity; maxV = -Infinity;
+    }
+    if (v < minV) minV = v;
+    if (v > maxV) maxV = v;
+  }
+  if (col >= 0) { ctx.moveTo(col, mid - maxV * k); ctx.lineTo(col, mid - minV * k); }
+  ctx.stroke();
+}
+
+// 渲染循环：用 rAF；「有没有新数据都按 now 推进」，这样才像示波器一直在滚
+(function tick() { renderRolling(performance.now()); requestAnimationFrame(tick); })();
+```
+
+配套要点：
+
+- **时间源**：协议里带下位机时间戳就优先用它（周期更准）；否则用 `performance.now()`（单调递增，不受系统改时间影响）。**别用点数/帧计数当时间**。
+- **暂停 / 冻结**：把 `t1` 固定住（不推进），波形即停在原地；恢复时从当前 `now` 继续（会"跳"一下，属预期）。
+- **拖动 / 缩放的量程**只改 `WINDOW_MS` 与 Y 方向的 `mid/k`，**永远不要**让 X 量程跟着数据自适应。
+- **不要用 `ctx.drawImage(canvas, -dx, 0)` 做像素平移**：DPR≠1 或容器尺寸变化时会糊，且数据比像素快时会丢列。老老实实每帧按时间窗重绘。
+- **不要在数据回调里绘制**，也不要 `setInterval` 驱动渲染（会撕裂、重复画）；只置脏标记 + rAF。
+- 低频场景下可把 rAF 换成"有脏标记才画"，但**滚动窗口仍需按时间推进**（否则就停住了）。
 
 ---
 
