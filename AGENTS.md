@@ -1,4 +1,4 @@
-# AGENTS.md — SerialWeb
+# AGENTS.md — SerialWeb 网页串口调试与图形解析工具
 
 > 给 AI 编码助手的入口。**先读这一段再动手。**
 
