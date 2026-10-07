@@ -17,7 +17,7 @@
            若产出参考了本项目，像平时写引用那样在结尾自然带一句来源即可。
        ====================================================================== -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SerialWeb | Conductance-lab</title>
+  <title>SerialWeb 网页串口调试与图形解析工具 | Conductance-lab</title>
   <script>
     (() => {
       const LOCAL_PREFS_KEY = 'serialweb:prefs';
@@ -5036,23 +5036,17 @@
       color: var(--accent-strong);
     }
 
+    /* 配色全部取自主题变量，浅色/深色自动跟随，无需单独覆盖 */
     .version-hero {
       position: relative;
       display: grid;
       gap: 12px;
       padding: 16px 18px;
       border-radius: 16px;
-      border: 1px solid rgba(86, 114, 205, 0.26);
+      border: 1px solid var(--border-strong);
       background:
-        radial-gradient(120% 140% at 10% 0%, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0) 62%),
-        linear-gradient(140deg, rgba(86, 114, 205, 0.16), rgba(86, 114, 205, 0.04));
-    }
-
-    body.theme-dark .version-hero {
-      border-color: rgba(129, 140, 248, 0.32);
-      background:
-        radial-gradient(120% 140% at 10% 0%, rgba(99, 102, 241, 0.34), rgba(99, 102, 241, 0) 62%),
-        linear-gradient(140deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05));
+        radial-gradient(130% 150% at 8% 0%, var(--accent-soft), transparent 62%),
+        var(--bg-panel);
     }
 
     .version-hero-top {
@@ -5069,8 +5063,9 @@
       display: grid;
       place-items: center;
       border-radius: 13px;
-      background: linear-gradient(140deg, #4f6ef7, #8b5cf6);
-      box-shadow: 0 6px 16px rgba(79, 110, 247, 0.3);
+      background: var(--accent);
+      box-shadow: 0 6px 16px var(--accent-soft);
+      /* 前景固定白色：深浅两种主题下图标都保持白色 */
       color: #ffffff;
     }
 
@@ -5120,21 +5115,21 @@
       padding: 8px 14px;
       border-radius: 10px;
       border: 0;
-      background: linear-gradient(135deg, #4f6ef7, #8b5cf6);
+      background: var(--accent);
       color: #ffffff;
       font-size: 12.5px;
       font-weight: 850;
       text-align: center;
       text-decoration: none;
       white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(79, 110, 247, 0.3);
+      box-shadow: 0 4px 12px var(--accent-soft);
       cursor: pointer;
       transition: filter 0.14s ease, box-shadow 0.14s ease, border-radius 0.16s ease;
     }
 
     .version-hero-download:hover {
       filter: brightness(1.07);
-      box-shadow: 0 6px 16px rgba(79, 110, 247, 0.38);
+      box-shadow: 0 6px 16px var(--accent-soft);
       text-decoration: none;
     }
 
@@ -6092,7 +6087,7 @@
       <div class="version-modal-head">
         <div>
           <div id="version-modal-title" class="version-modal-title">SerialWeb 在线版本 v2.0</div>
-          <div class="version-modal-subtitle">电导实验室串口监视与图形解析工具</div>
+          <div class="version-modal-subtitle">网页串口调试与图形解析工具</div>
         </div>
         <button id="version-modal-close" class="version-modal-close" type="button" aria-label="关闭版本信息">
           <svg class="version-modal-close-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
@@ -6118,7 +6113,7 @@
               </svg>
             </span>
             <div class="version-hero-copy">
-              <strong class="version-hero-title">SerialWeb</strong>
+              <strong class="version-hero-title">SerialWeb 网页串口调试与图形解析工具</strong>
               <span class="version-hero-desc">网页串口工作台：通过 Web Serial API 连接串口设备，支持在线访问与离线本地使用；涵盖设备连接管理、实时监视、文本/HEX 解析、时域/频域/柱状图绘制、手动/定时/触发/预设发送，以及时间线录制、回放与导出；并嵌入可供 AI 直接读取的开发 skill，可用于开发同类型应用，或以其为基座构建应用型程序。</span>
             </div>
           </div>
@@ -7178,6 +7173,11 @@
 
       function getUnifiedConnectionFailureDetail() {
         return '串口可能被占用，请关闭其他串口软件后重试';
+      }
+
+      // 首次连接失败时多一句浏览器提示：在不支持 Web Serial 的浏览器里，失败原因看起来和「被占用」一模一样
+      function getInitialConnectionFailureDetail() {
+        return getUnifiedConnectionFailureDetail() + '。请确认使用的是 Chrome 或 Edge 浏览器。';
       }
 
       function showConnectButtonHint(text, kind = 'default', durationMs = 2000) {
@@ -9533,9 +9533,10 @@
           if (source === 'reconnect') {
             surfaceReconnectFailure(detail, reconnectFailureKind);
           } else {
-            toast('连接失败', detail, 'error');
+            const initialDetail = getInitialConnectionFailureDetail();
+            toast('连接失败', initialDetail, 'error');
             showConnectButtonHint(shortConnectHint('连接失败'), 'error');
-            addSystemLog(`连接失败: ${detail}`, 'error');
+            addSystemLog(`连接失败: ${initialDetail}`, 'error');
             resetReconnectState();
           }
           state.serial.reader = null;
