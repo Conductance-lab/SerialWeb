@@ -7175,6 +7175,11 @@
         return '串口可能被占用，请关闭其他串口软件后重试';
       }
 
+      // 首次连接失败时多一句浏览器提示：在不支持 Web Serial 的浏览器里，失败原因看起来和「被占用」一模一样
+      function getInitialConnectionFailureDetail() {
+        return getUnifiedConnectionFailureDetail() + '。请确认使用的是 Chrome 或 Edge 浏览器。';
+      }
+
       function showConnectButtonHint(text, kind = 'default', durationMs = 2000) {
         state.ui.connectHintText = text;
         state.ui.connectHintKind = kind;
@@ -9528,9 +9533,10 @@
           if (source === 'reconnect') {
             surfaceReconnectFailure(detail, reconnectFailureKind);
           } else {
-            toast('连接失败', detail, 'error');
+            const initialDetail = getInitialConnectionFailureDetail();
+            toast('连接失败', initialDetail, 'error');
             showConnectButtonHint(shortConnectHint('连接失败'), 'error');
-            addSystemLog(`连接失败: ${detail}`, 'error');
+            addSystemLog(`连接失败: ${initialDetail}`, 'error');
             resetReconnectState();
           }
           state.serial.reader = null;
