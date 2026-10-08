@@ -6153,6 +6153,7 @@
               <li>修复中文等多字节字符显示与解析乱码的问题。</li>
               <li>修复切换字符编码后历史数据未重新解析、ASCII / Latin-1 编解码不一致及 UTF-16LE 换行误判的问题。</li>
               <li>解析结果导出写入 UTF-8 BOM，修复 Excel 中文乱码。</li>
+              <li>重构文本解析：自动识别支持 <code>=</code> 与 <code>:</code> 分隔符、整数与小数统一匹配，按「一行一条」完整行解析，并修正频域图通道的可选判定。</li>
             </ul>
           </div>
           <div class="version-release">
@@ -6520,6 +6521,7 @@
         derived: {
           availableFields: [],
           recommendedRule: '',
+          autoDetectHint: '',
           numericSeries: {},
           chartSeries: {},
           chartIntervalMs: 1,
@@ -8747,13 +8749,22 @@
 
       function expandTextSamplesFromRawChunks(rawChunks = []) {
         return rebuildEventsFromRawChunks(rawChunks)
-          .filter((event) => event.direction === 'rx' || event.direction === 'tx')
+          .filter(isParsableTextSampleEvent)
           .map((event) => createTextSampleFromEvent(event));
+      }
+
+      // 「一条 = 一行」：未收到换行符的半条（rxOpen 仍为 true）不参与解析，
+      // 否则同一条会先按 "温度=25.3" 再按 "温度=25.34" 反复解析，结果来回跳。
+      // 超长行按字节数的兜底切分会把 rxOpen 置为 false，所以它仍会参与解析。
+      function isParsableTextSampleEvent(event) {
+        if (!event) return false;
+        if (event.direction !== 'rx' && event.direction !== 'tx') return false;
+        return event.metadata?.rxOpen !== true;
       }
 
       function expandTextSamplesFromEvents(events = []) {
         return (events || [])
-          .filter((event) => event.direction === 'rx' || event.direction === 'tx')
+          .filter(isParsableTextSampleEvent)
           .map((event) => createTextSampleFromEvent(event));
       }
 
@@ -10511,6 +10522,11 @@
         }, 80);
       }
 
+      // 统一数值匹配模式：/intN 与 /floatN 共用它（整数、小数、正负号都接受）。
+      // 分类仍用 isAutoRuleFloatToken / isAutoRuleIntToken 区分标签，但匹配不再因类型而失配：
+      // 设备把 1500 变成 1500.5（或反过来）时，规则照旧能用。
+      const AUTO_RULE_NUMERIC_SOURCE = '[+-]?(?:\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+)';
+
       function tokenizeTemplateRule(ruleText) {
         const source = String(ruleText || '');
         const segments = [];
@@ -10556,6 +10572,24 @@
         return '';
       }
 
+      // 紧跟数值的字母会被正则当成 name（"3.316V"、"3.316 V"、"1500rpm" 里的 V/rpm），
+      // 那其实是单位。不把它们并回字面量，字段形状就会被单位拆乱，name=value 配对也跟着失效。
+      // 但后面跟着 '=' 的词一定是字段名（如 "b=2"），不能当单位。
+      function isAutoRuleNumericValueSegment(segment) {
+        return Boolean(segment && segment.type === 'value' && (segment.kind === 'int' || segment.kind === 'float'));
+      }
+
+      function isAutoRuleUnitAfterNumeric(segments) {
+        const previous = segments[segments.length - 1];
+        if (!previous) return false;
+        if (isAutoRuleNumericValueSegment(previous)) return true;
+        // 数值与单位之间只隔空格的情况："3.316 V"
+        if (previous.type === 'literal' && /^[ \t]+$/.test(previous.value)) {
+          return isAutoRuleNumericValueSegment(segments[segments.length - 2]);
+        }
+        return false;
+      }
+
       function tokenizeAutoRuleFrame(text) {
         const source = String(text || '');
         const matcher = /[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)|[\p{L}\p{N}](?:[\p{L}\p{N}_-]|[ \t]+(?=[\p{L}]))*/gu;
@@ -10568,11 +10602,18 @@
           }
           const value = match[0];
           const numericKind = isAutoRuleFloatToken(value) ? 'float' : isAutoRuleIntToken(value) ? 'int' : '';
-          segments.push({
-            type: 'value',
-            kind: numericKind || 'name',
-            value
-          });
+          const followedByLabelSeparator = /^[ \t]*[=:：]/.test(source.slice(match.index + value.length));
+          if (!numericKind && !followedByLabelSeparator && isAutoRuleUnitAfterNumeric(segments)) {
+            const previous = segments[segments.length - 1];
+            if (previous.type === 'literal') previous.value += value;
+            else segments.push({ type: 'literal', value });
+          } else {
+            segments.push({
+              type: 'value',
+              kind: numericKind || 'name',
+              value
+            });
+          }
           lastIndex = match.index + value.length;
         }
         if (lastIndex < source.length) {
@@ -10594,15 +10635,17 @@
       }
 
       function isAutoRuleDynamicNameSeparator(text) {
-        return /^[\s]*=[\s]*$/.test(String(text || ''));
+        // 字段名与值之间的分隔符：'=' 或 ':'（含全角 '：'），固件常见 "Brightness: 100" 这种写法
+        return /^[\s]*[=:：][\s]*$/.test(String(text || ''));
       }
 
       function getAutoRuleNameValuePairs(segments) {
         const pairs = [];
         let index = 0;
         while (index < segments.length) {
-          const spacer = segments[index];
-          if (spacer?.type === 'literal' && /^[\s,;，；]*$/.test(spacer.value)) {
+          // 字段之间允许出现任意固定字面量（单位、逗号、空格）；
+          // 但 '=' 是 name 与值的分隔符，必须留给下一步，不能在这里吃掉
+          if (segments[index]?.type === 'literal' && !isAutoRuleDynamicNameSeparator(segments[index].value)) {
             index += 1;
             continue;
           }
@@ -10616,7 +10659,7 @@
           ) {
             return [];
           }
-          pairs.push({ name, value, valueIndex: index + 2 });
+          pairs.push({ name, separator, value, valueIndex: index + 2 });
           index += 3;
         }
         return pairs;
@@ -10636,7 +10679,10 @@
           if (current.value.kind === 'float' || previous.value.kind === 'float') valueKind = 'float';
           if (changedIndexes.has(current.valueIndex)) hasChangedValue = true;
         }
-        return hasChangedValue ? `/name0=/${valueKind}0` : '';
+        // 用实际观察到的分隔符（'=' 或 ':'）生成规则，
+        // 这样单字段行（如 "Brightness: 100"）能直接走严格正则，字段名也能带出来
+        const separatorText = currentPairs[0]?.separator?.value || '=';
+        return hasChangedValue ? `/name0${separatorText}/${valueKind}0` : '';
       }
 
       function shouldPromoteStableAutoRuleName(segments, index, changedIndexes) {
@@ -10665,7 +10711,10 @@
         if (!changedIndexes.size) return '';
         const pairRule = buildAutoDetectedNameValuePairRule(previousSegments, currentSegments, changedIndexes);
         if (pairRule) return pairRule;
-        const counters = { name: 0, int: 0, float: 0 };
+        // 编号必须与 name 的数字对齐：name 与其后面的数值共用同一个字段序号，数值用掉才推进。
+        // （之前 int/float 各自计数，"3 个 float + 1 个 int" 会生成 float0/1/2 + int0，
+        //   于是 /int0 被绑到 /name0 上，转速的值就挂到了温度头上。）
+        let fieldCursor = 0;
         return currentSegments.map((segment, index) => {
           if (segment.type === 'literal') return segment.value;
           const promoteStableName = !changedIndexes.has(index)
@@ -10675,21 +10724,32 @@
             ? 'name'
             : getAutoRuleValueKind(previousSegments[index].value, segment.value);
           if (!kind) return segment.value;
-          return `/${kind}${counters[kind]++}`;
+          const tagIndex = fieldCursor;
+          if (kind !== 'name') fieldCursor += 1;
+          return `/${kind}${tagIndex}`;
         }).join('');
       }
 
       function buildAutoDetectedRule(events) {
+        // 与解析口径保持一致：解析只处理 RX（processDerivedTextSample 会跳过 TX）。
+        // 自动识别若把 TX 也算进来，就会出现「按钮说可用、点了却解析不出结果」。
         const candidates = events
-          .filter((event) => event.direction === 'rx' || event.direction === 'tx')
+          .filter((event) => event.direction === 'rx')
           .map((event) => getEventDisplayText(event).trim())
           .filter(Boolean)
           .slice(-12);
-        if (candidates.length < 2) return '';
+        if (candidates.length < 2) {
+          state.derived.autoDetectHint = '需要至少两行接收数据（以换行结尾）才能自动识别';
+          return '';
+        }
         for (let index = candidates.length - 1; index > 0; index -= 1) {
           const rule = buildAutoDetectedRuleFromPair(candidates[index - 1], candidates[index]);
-          if (rule) return rule;
+          if (rule) {
+            state.derived.autoDetectHint = '';
+            return rule;
+          }
         }
+        state.derived.autoDetectHint = '最近这些行的结构不一致，或数值没有发生变化，无法自动识别；可手动编写规则';
         return '';
       }
 
@@ -10794,8 +10854,9 @@
           }
           groupIndex += 1;
           groups.push({ groupIndex, kind: segment.kind, index: segment.index, raw: segment.raw });
-          if (segment.kind === 'int') return '([+-]?\\d+)';
-          if (segment.kind === 'float') return '([+-]?(?:\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+))';
+          if (segment.kind === 'int' || segment.kind === 'float') {
+            return '(' + AUTO_RULE_NUMERIC_SOURCE + ')';
+          }
           return '([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)?';
         }).join('');
         return {
@@ -10828,21 +10889,9 @@
         };
       }
 
-      function extractRelaxedTemplateName(source, segments, group) {
-        const groupIndex = segments.findIndex((item) => item.type === 'tag' && item.raw === group.raw);
-        const literalBefore = groupIndex > 0 && segments[groupIndex - 1]?.type === 'literal' ? segments[groupIndex - 1].value : '';
-        const literalAfter = groupIndex >= 0 && segments[groupIndex + 1]?.type === 'literal' ? segments[groupIndex + 1].value : '';
-        const finder = new RegExp(`${escapeRegex(literalBefore)}\\s*([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)\\s*${escapeRegex(literalAfter)}`, 'u');
-        const match = source.match(finder);
-        return match ? match[1] : '';
-      }
-
       function convertTemplateValue(kind, raw) {
-        if (kind === 'int') {
-          const value = Number.parseInt(raw, 10);
-          return Number.isFinite(value) ? value : raw;
-        }
-        if (kind === 'float') {
+        // int 也走数值解析：统一匹配后 /intN 同样可能收到带小数点的值
+        if (kind === 'int' || kind === 'float') {
           const value = Number.parseFloat(raw);
           return Number.isFinite(value) ? value : raw;
         }
@@ -10851,10 +10900,8 @@
 
       function parseRepeatedTemplateNameValuePairs(source, groups) {
         if (groups.length !== 2 || groups[0].kind !== 'name' || !['int', 'float'].includes(groups[1].kind)) return null;
-        const valuePattern = groups[1].kind === 'int'
-          ? '([+-]?\\d+)'
-          : '([+-]?(?:\\d+\\.\\d+|\\d+\\.|\\.\\d+|\\d+))';
-        const pairRegex = new RegExp(`([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)\\s*=\\s*${valuePattern}`, 'gu');
+        const valuePattern = '(' + AUTO_RULE_NUMERIC_SOURCE + ')';
+        const pairRegex = new RegExp(`([\\p{L}\\p{N}](?:[\\p{L}\\p{N}_-]|[ \\t]+(?=[\\p{L}]))*)\\s*[=:：]\\s*${valuePattern}`, 'gu');
         const cards = [];
         const values = {};
         let match;
@@ -10899,41 +10946,10 @@
             segments
           };
         }
-        const numericTags = groups.filter((group) => group.kind !== 'name');
-        if (!numericTags.length) return null;
-        const relaxedTokens = source.match(/[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)|[\p{L}\p{N}](?:[\p{L}\p{N}_-]|[ \t]+(?=[\p{L}]))*/gu) || [];
-        const relaxedMatches = [];
-        let tokenIndex = 0;
-        numericTags.forEach((group) => {
-          let value = null;
-          while (tokenIndex < relaxedTokens.length) {
-            const token = relaxedTokens[tokenIndex++];
-            if (group.kind === 'int' && /^[+-]?\d+$/.test(token)) {
-              value = convertTemplateValue(group.kind, token);
-              break;
-            }
-            if (group.kind === 'float' && /^[+-]?(?:\d+\.\d+|\d+\.|\.\d+|\d+)$/.test(token)) {
-              value = convertTemplateValue(group.kind, token);
-              break;
-            }
-          }
-          relaxedMatches.push(value);
-        });
-        if (!relaxedMatches.some((value) => Number.isFinite(value))) return null;
-        let numericIndex = 0;
-        groups.forEach((group) => {
-          if (group.kind === 'name') {
-            values[group.raw] = extractRelaxedTemplateName(source, segments, group);
-          } else {
-            values[group.raw] = relaxedMatches[numericIndex++];
-          }
-        });
-        const result = buildTemplateValuePairs(groups, values);
-        return {
-          values: result.values,
-          cards: result.cards,
-          segments
-        };
+        // 严格正则与重复对都未命中：不再用「只按第几个数值」的宽松兜底。
+        // 那种兜底会忽略字面量，把别的行格式的数值错配到本规则的字段上（静默错值），
+        // 所以这里直接判定为「本行不匹配」，宁可不出结果。
+        return null;
       }
 
       function decodeFloat16Bits(bits) {
@@ -11261,6 +11277,26 @@
         return null;
       }
 
+      // 频域图要求等间隔采样：只有「最近 STABLE_TEXT_NAME_WINDOW 行都出现了该 name」才算稳定。
+      // 旧逻辑是 namePairedSet.size === 1 且只取第一个，导致多字段时频域图全都是灰的。
+      const STABLE_TEXT_NAME_WINDOW = 5;
+
+      function trackStableTextNames(runtime, presentNames) {
+        if (!Array.isArray(runtime.textNameWindow)) runtime.textNameWindow = [];
+        runtime.textNameWindow.push(presentNames instanceof Set ? presentNames : new Set());
+        while (runtime.textNameWindow.length > STABLE_TEXT_NAME_WINDOW) runtime.textNameWindow.shift();
+        const window = runtime.textNameWindow;
+        // 只有一行时不能算稳定（否则一接上就全部可勾选）
+        const stable = window.length >= 2 ? new Set(window[0]) : new Set();
+        if (window.length >= 2) {
+          for (let i = 1; i < window.length; i += 1) {
+            stable.forEach(function(name) { if (!window[i].has(name)) stable.delete(name); });
+          }
+        }
+        runtime.stableTextNames = stable;
+        return stable;
+      }
+
       function processDerivedTextSample(runtime, sample, ruleText) {
         if (sample.direction !== 'rx') return;
         const timestamp = normalizeTimestampMs(sample.timestamp);
@@ -11286,12 +11322,13 @@
             var ruleSegments = tokenizeTemplateRule(ruleText);
             var rawTagNames = {};
             ruleSegments.forEach(function(s) { if (s.type === 'tag') rawTagNames[s.kind + s.index] = true; });
-            if (!runtime.namePairedSet) runtime.namePairedSet = new Set();
+            var presentNames = new Set();
             parsed.cards.forEach(function(c) {
               if (!rawTagNames[c.key] && typeof c.value === 'number') {
-                runtime.namePairedSet.add(c.key);
+                presentNames.add(c.key);
               }
             });
+            trackStableTextNames(runtime, presentNames);
           }
           pushDerivedChartValues(runtime, parsed.values, timestamp, 'parsed');
         }
@@ -11438,12 +11475,8 @@
         state.derived.numericSeries = runtime.numericSeries;
         state.derived.configuredFields = configuredFields;
         state.derived.availableFields = mergeAvailableFields(configuredFields, runtime.fieldTypes);
-        if (runtime.namePairedSet && runtime.namePairedSet.size === 1) {
-          var uniqueName = runtime.namePairedSet.values().next().value;
-          state.derived.stableNameFields = ['parsed.' + uniqueName];
-        } else {
-          state.derived.stableNameFields = [];
-        }
+        var stableTextNames = runtime.stableTextNames instanceof Set ? runtime.stableTextNames : new Set();
+        state.derived.stableNameFields = Array.from(stableTextNames).map(function(name) { return 'parsed.' + name; });
         state.derived.recommendedRule = buildRecommendedRule(activeEvents);
         const chartIntervalMs = estimateDerivedChartIntervalMs(runtime);
         const chartTracks = buildDerivedChartTracks(runtime, chartIntervalMs);
@@ -11557,6 +11590,9 @@
       function renderDerivedViews() {
         const detectionReady = Boolean(state.derived.recommendedRule);
         refs.applyRecommendedRuleBtn.textContent = detectionReady ? '自动识别：可用' : '自动识别：不可用';
+        refs.applyRecommendedRuleBtn.title = detectionReady
+          ? '已识别出可用规则，点击应用到文本解析'
+          : (state.derived.autoDetectHint || '暂无可用的自动识别结果，可手动编写规则');
         refs.applyRecommendedRuleBtn.classList.toggle('is-ready', detectionReady);
         refs.applyRecommendedRuleBtn.setAttribute('aria-disabled', detectionReady ? 'false' : 'true');
         if (!detectionReady) {
@@ -13929,7 +13965,8 @@
           successfulFrames: [],
           fieldTypes: new Map(),
           latestCards: [],
-          namePairedSet: new Set(),
+          textNameWindow: [],
+          stableTextNames: new Set(),
           binaryRemainders: { rx: [], tx: [] }
         };
       }
