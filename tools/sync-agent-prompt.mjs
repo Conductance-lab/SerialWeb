@@ -7,14 +7,10 @@
  *   node tools/sync-agent-prompt.mjs release/v2.0/index.html  # 同时写入其它副本
  *   node tools/sync-agent-prompt.mjs --check                  # 只检查是否已同步（CI 可用）
  *
- * 原理：HTML 里有一对标记
- *   <!-- AI-PROMPT:BEGIN --> ... <!-- AI-PROMPT:END -->
- * 脚本用 ai/agent-prompt.md 的正文重建该区间，并把它固定放在 </body> 之前（旧位置会被自动清理）：
+ * 原理：用 ai/agent-prompt.md 的正文重建 index.html 里
+ *   <!-- AI-PROMPT:BEGIN --> ... <!-- AI-PROMPT:END --> 之间的区间，并固定放在 </body> 之前：
  *   <div id="ai-agent-prompt" class="ai-agent-prompt"> …提示词正文… </div>
- * 这个 div 被 .ai-agent-prompt 样式裁到 1px 且不可选中 —— 用户看不到、选中不了，
- * 但它是真实的文本节点：源码、DOM（textContent）与“整页可见文本提取”都能读到。
- * 之所以不再放在 <head> 的 <script type="text/plain"> 里：那类内容不会进入整页文本提取，
- * 会使“只读页面文本”的 AI 拿不到提示词。
+ * 该 div 被样式裁到 1px 且不可选中，但仍是真实文本节点，源码 / DOM / 整页文本提取都能读到。
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -32,7 +28,6 @@ if (/[<>]/.test(canonical)) {
   process.exit(1);
 }
 
-// 默认目标 index.html；也可追加额外目标，例如：node tools/sync-agent-prompt.mjs release/v2.0/index.html
 const targets = [
   indexPath,
   ...process.argv
