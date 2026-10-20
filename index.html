@@ -6146,7 +6146,8 @@
           <div class="version-release">
             <strong>v2.1 版本 · 26/10/19</strong>
             <ul>
-              <li>文本解析规则改为单行输入，换行不再参与解析。</li>
+              <li>优化重新加载时自动连接上次使用的串口设备的逻辑。</li>
+              <li>文本解析规则限定为单行，回车与换行不再参与解析。</li>
             </ul>
           </div>
           <div class="version-release">
@@ -9538,6 +9539,11 @@
           };
           if (source === 'reconnect') {
             surfaceReconnectFailure(detail, reconnectFailureKind);
+          } else if (source === 'auto-initial') {
+            // 加载时自动连接上次授权的设备失败（多半是设备没插）：非用户主动操作，
+            // 只记一条日志，不弹错误提示、不改按钮提示
+            addSystemLog('未能自动连接上次使用的串口设备。', 'meta');
+            resetReconnectState();
           } else {
             const initialDetail = getInitialConnectionFailureDetail();
             toast('连接失败', initialDetail, 'error');
