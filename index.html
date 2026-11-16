@@ -11228,9 +11228,10 @@
 
       function pushDerivedChartValues(runtime, values, timestamp, prefix = 'parsed') {
         const normalizedTimestamp = normalizeTimestampMs(timestamp);
-        const baseTimestamp = prefix === 'parsed'
-          ? (runtime.textBaseTimestamp || normalizedTimestamp)
-          : (runtime.binaryBaseTimestamp || normalizedTimestamp);
+        // Both parsers emit parsed fields; select their clock by parser mode.
+        const baseTimestamp = runtime.mode === 'binary'
+          ? (runtime.binaryBaseTimestamp || normalizedTimestamp)
+          : (runtime.textBaseTimestamp || normalizedTimestamp);
         const relative = Math.max(0, normalizedTimestamp - baseTimestamp);
         let hasNumeric = false;
         Object.entries(values || {}).forEach(([key, value]) => {
